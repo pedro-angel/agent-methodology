@@ -1,0 +1,6 @@
+# Normalize line endings; force LF so the POSIX-sh validators run on any OS.
+* text=auto eol=lf
+*.sh text eol=lf
+*.md   text
+*.yml  text
+*.yaml text

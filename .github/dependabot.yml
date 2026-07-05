@@ -1,0 +1,13 @@
+version: 2
+updates:
+  # Keep the SHA-pinned GitHub Actions fresh. Dependabot opens a PR when a pinned
+  # action has a newer release; bot commits are exempted from the provenance-trailer
+  # check in .github/workflows/checks.yml so these PRs pass CI.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"

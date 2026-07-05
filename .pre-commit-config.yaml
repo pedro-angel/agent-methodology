@@ -1,0 +1,102 @@
+# .pre-commit-config.yaml — agent-methodology (RECOMMENDED tier)
+#
+# Greenfield setup:
+#   git init
+#   pre-commit install --install-hooks      # or, for a zero-Python single binary:  prek install
+#
+# CI re-runs THIS SAME FILE (see .github/workflows/checks.yml), so local and CI cannot drift.
+# Every external `rev:` is pinned to an immutable tag (run `pre-commit autoupdate --freeze`
+# to rewrite them to commit SHAs for maximum reproducibility).
+
+default_install_hook_types: [pre-commit, commit-msg]
+minimum_pre_commit_version: "3.5.0"
+
+repos:
+  # ---- generic file hygiene -------------------------------------------------
+  # Python-language hooks, provisioned in an isolated env; the repo tree stays markdown.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-case-conflict          # skill-slug directory names are case-load-bearing
+      - id: check-added-large-files
+        args: [--maxkb=512]
+      - id: detect-private-key           # honors the "no secrets" invariant; no baseline needed
+      # `no-commit-to-branch` is intentionally OMITTED: this is a solo repo whose working
+      # branch IS main. Teams adopting templates/git-controls/ can re-enable it there.
+
+  # ---- generic markdown style ----------------------------------------------
+  # Node hook, auto-provisioned and sandboxed by the manager (never committed).
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.22.1
+    hooks:
+      - id: markdownlint-cli2
+        # Config: .markdownlint-cli2.yaml (MD013/MD033/MD041 relaxed for a prose pack).
+        # markdownlint targets *.md, so the Cursor .mdc adapter is not linted here —
+        # it is covered by check-adapters-no-stale-links.sh below.
+
+  # ---- conventional-commit TYPE PREFIX (commit-msg stage) -------------------
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [feat, fix, docs, chore, refactor, test, build, ci, perf, style, revert]
+
+  # ---- PROJECT-INVARIANT VALIDATORS ----------------------------------------
+  # POSIX sh, zero runtime deps. These encode THIS pack's contract — exactly what a
+  # human reviewer used to check by hand, and what no off-the-shelf linter can verify.
+  - repo: local
+    hooks:
+      - id: check-skill-frontmatter
+        name: "every SKILL.md has name==slug + 'Use when' description"
+        language: script
+        entry: scripts/checks/check-skill-frontmatter.sh
+        files: ^skills/.*/SKILL\.md$
+        pass_filenames: false
+      - id: check-agents-links-skills
+        name: "AGENTS.md links every skill (and only real ones)"
+        language: script
+        entry: scripts/checks/check-agents-links-skills.sh
+        files: ^(AGENTS\.md|skills/)
+        pass_filenames: false
+      - id: check-readme-index
+        name: "README skill-index == skills/ dirs"
+        language: script
+        entry: scripts/checks/check-readme-index.sh
+        files: ^(README\.md|skills/)
+        pass_filenames: false
+      - id: check-crosslinks-resolve
+        name: "every ../<slug>/SKILL.md cross-link resolves"
+        language: script
+        entry: scripts/checks/check-crosslinks-resolve.sh
+        files: ^skills/.*\.md$
+        pass_filenames: false
+      - id: check-adapters-no-stale-links
+        name: "adapters carry no stale ../../ links"
+        language: script
+        entry: scripts/checks/check-adapters-no-stale-links.sh
+        files: ^adapters/
+        pass_filenames: false
+      - id: check-adapters-complete
+        name: "every enumerating adapter lists all skills"
+        language: script
+        entry: scripts/checks/check-adapters-complete.sh
+        files: ^(adapters/|skills/)
+        pass_filenames: false
+      - id: check-templates-in-sync
+        name: "templates/git-controls mirrors the root controls"
+        language: script
+        entry: scripts/checks/check-templates-in-sync.sh
+        files: ^(templates/git-controls/|scripts/checks/|\.pre-commit-config\.yaml|\.markdownlint-cli2\.yaml|\.github/workflows/checks\.yml)
+        pass_filenames: false
+      - id: check-commit-trailer
+        name: "commit body carries a provenance trailer"
+        language: script
+        entry: scripts/checks/check-commit-trailer.sh
+        stages: [commit-msg]
