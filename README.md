@@ -3,7 +3,7 @@
 [![checks](https://github.com/pedro-angel/agent-methodology/actions/workflows/checks.yml/badge.svg)](https://github.com/pedro-angel/agent-methodology/actions/workflows/checks.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A portable engineering methodology for AI coding agents, distilled from one real, shipped build: a hexagonal, human-in-the-loop AI agent deployed to a serverless cloud runtime, behind a framework-free domain, with a CI-able eval harness gating its LLM decisions. Every rule here earned its place by surviving that build — docs that drifted from code, integrations that passed mocks and failed live, models that over-flagged, secrets, and teardown. The result is provenance you can trust without lore you have to learn: nothing below assumes a particular language, framework, or agent runtime, and you never need to know the source project to apply a single rule.
+A portable engineering methodology for AI coding agents, distilled from real builds: primarily a shipped, hexagonal, human-in-the-loop AI agent deployed to a serverless cloud runtime, behind a framework-free domain, with a CI-able eval harness gating its LLM decisions — and, for the fan-out and large-surface live-testing rules, a second build: a REST API client covering an external system's full API against a containerized live server. Every rule here earned its place by surviving a real build — docs that drifted from code, integrations that passed mocks and failed live, models that over-flagged, parallel agents that collided on shared state, secrets, and teardown. The result is provenance you can trust without lore you have to learn: nothing below assumes a particular language, framework, or agent runtime, and you never need to know either source project to apply a single rule.
 
 ## Philosophy
 
@@ -32,6 +32,7 @@ Match your task to the skills below — most non-trivial work touches two or thr
 | [docs-as-deliverable](skills/docs-as-deliverable/SKILL.md) | Shipping or handing off code — treat docs as first-class: present-tense prose, diagrams authored as code, every claim verified against the running reality, comprehension proven by an actual reader. |
 | [decision-memory](skills/decision-memory/SKILL.md) | A decision, gotcha, or preference would otherwise be re-derived next session — capture it as a small, dated, indexed note at the moment of discovery, and verify a note still holds before trusting it. |
 | [autonomous-self-improvement-loop-safety](skills/autonomous-self-improvement-loop-safety/SKILL.md) | Building automation that edits, tests, or deploys itself — disposable fresh-clone per cycle, decide success by a mechanical check not the worker's word, bind tested==shipped, and keep an adversarial pass plus a human on the merge. |
+| [parallel-agent-fan-out](skills/parallel-agent-fan-out/SKILL.md) | Fanning out many write-capable sub-agents across one build — pre-wire the shared seams, hand each a disjoint file-ownership manifest, namespace every resource on shared live substrate, and re-run every agent's own gate yourself instead of trusting its report. |
 
 ## Repo layout
 
@@ -65,7 +66,7 @@ That is the whole install for most agents. See [INSTALL.md](INSTALL.md) for ever
 
 ## License, provenance & prior art
 
-Released under the [MIT License](LICENSE) — copy it into your own projects, proprietary ones included, with no obligation beyond keeping the copyright notice. The author owns this material and releases it freely; the "real, shipped build" it was distilled from is used only as an illustrative source, and its identifying details have been genericized — you never need to know that project to apply a rule.
+Released under the [MIT License](LICENSE) — copy it into your own projects, proprietary ones included, with no obligation beyond keeping the copyright notice. The author owns this material and releases it freely; the real builds it was distilled from are used only as illustrative sources, and their identifying details have been genericized — you never need to know either project to apply a rule.
 
 This pack follows two open conventions it does not own — the [`AGENTS.md`](https://agents.md) root-instruction convention and the `skills/<slug>/SKILL.md` Agent Skills format — while the methodology content itself is original.
 

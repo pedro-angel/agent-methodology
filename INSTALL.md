@@ -116,4 +116,4 @@ If the agent doesn't see the methodology, check that the file landed at the path
 
 ---
 
-This methodology was distilled from a real shipped build (a hexagonal, human-in-the-loop AI agent deployed to a cloud platform, gated by a CI-able eval harness) and is used here only as an illustrative source. You need to know nothing about that project to install or apply the pack — every rule stands on its own on any stack. The pack is released under the [MIT License](LICENSE); copy it into your own projects, proprietary ones included, freely.
+This methodology was distilled from real builds — primarily a shipped, hexagonal, human-in-the-loop AI agent deployed to a cloud platform, gated by a CI-able eval harness, plus a second build (a REST API client covering an external system's full API against a live server) that earned the fan-out and large-surface live-testing rules — used here only as illustrative sources. You need to know nothing about either project to install or apply the pack — every rule stands on its own on any stack. The pack is released under the [MIT License](LICENSE); copy it into your own projects, proprietary ones included, freely.

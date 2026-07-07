@@ -55,7 +55,8 @@ back-fill process after the code. "Non-trivial" = anything beyond a one-file, fu
 ### battle-testing-on-real-infra
 
 - Before calling any integration, deployment, or hard guarantee "done," prove it end-to-end against the **real** systems — live API, real database, actual deployed runtime.
-- Record the run as a named evidence artifact (results file, captured log, saved response) someone else can open. Mocks prove wiring, not external reality (auth scopes, quota, serialization, cold starts, IAM propagation). If real infra is unavailable, mark that path explicitly untested.
+- Record the run as a named evidence artifact (results file, captured log, saved response) someone else can open. Mocks prove wiring, not external reality (auth scopes, quota, serialization, cold starts, IAM propagation).
+- Treat the spec as a hypothesis and the running system as ground truth: implement what the server does and record each divergence in the code. When a path's happy case needs infra you lack, drive the real route and assert its exact semantic rejection rather than dropping to mocks; mark a path untested only when even that is impossible, naming what's missing. Round-trip a model-backed feature through a real local model, not a mock.
 
 ### grounded-verifiable-gates
 
@@ -97,6 +98,12 @@ back-fill process after the code. "Non-trivial" = anything beyond a one-file, fu
 
 - When automation acts on its own substrate (an agent that edits, tests, or deploys its own repo), run each cycle in a disposable, freshly-cloned workspace and destroy it after. Decide success by a **mechanical** version-control check, never the worker's own "done." Bind tested==shipped so the revision that passed the gate is the one that ships.
 - Keep a recurring adversarial self-review that assumes the gate is blind on every trust-boundary change; stay propose-only with a human (or a credential that structurally cannot merge) on the landing; sandbox the write-capable worker structurally, not by prompt. Label every step real or mock and fail closed on mock.
+
+### parallel-agent-fan-out
+
+- When you fan out many write-capable sub-agents across one build (N modules, endpoints, call-sites), design the independence in and trust no report out.
+- Pre-wire the shared seams (registry, stubs, fixtures) yourself so each agent fills only a leaf; give each a disjoint file-ownership manifest and revert violations rather than merge them; serialize the join so only the coordinator edits shared seams.
+- On shared live substrate, namespace every resource an agent creates and forbid it touching anything it didn't create, cleaning up in a finalizer. Re-run each agent's own gate yourself (tests, types, lint, live run) against the merged tree, believing the exit code not the prose. Cut along real independence — if two units must edit the same file, they are one unit.
 
 ## Install
 

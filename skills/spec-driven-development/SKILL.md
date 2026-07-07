@@ -28,9 +28,9 @@ Red-flag thoughts that mean STOP and apply this skill:
 1. **Write the chain in order, before implementation code.** Produce BRIEF (the problem and goal) → RESEARCH (what exists, constraints, options) → SPECS (the *what*: requirements, behaviors, acceptance criteria) → DESIGN (the *how*: architecture, mechanism, trade-offs) → TASKS (the implementation plan derived from SPECS + DESIGN). State explicitly how each phase consumes the one before it.
 2. **Keep "what" and "how" in separate documents.** SPECS describe required behavior without prescribing mechanism; DESIGN commits to mechanism. TASKS is the build plan that falls out of both. Do not blur them into one file.
 3. **Gate each phase behind an independent peer review.** Have a second agent or person review the doc, then record the verdict *in the doc itself* (e.g., "Status: Approved" or "ACCEPT-WITH-NOTES"). Carry the review notes forward into later phases as refinements — do not re-litigate settled points.
-4. **Treat specs as durable, versioned artifacts.** When the implementation diverges from the spec, reconcile the spec *onto the delivered code* and bump its version (v0.3 → v0.4). The spec must describe what shipped, not what you once hoped to ship.
+4. **Treat specs as durable, versioned artifacts.** When the implementation diverges from the spec, reconcile the spec *onto the delivered code* and bump its version (v0.3 → v0.4). The spec must describe what shipped, not what you once hoped to ship. This holds doubly for a spec you don't own: an upstream OpenAPI document or a vendor's API reference is a hypothesis, not a contract — when it disagrees with the running system, the system wins (see [battle-testing-on-real-infra](../battle-testing-on-real-infra/SKILL.md)).
 5. **Strike through resolved open items, don't delete them.** Leave the original line with a strikethrough and a pointer to where it was resolved, so the decision trail survives.
-6. **Run each independent workstream through its own full cycle.** spec → plan → build → test against real infrastructure. When that infrastructure isn't available, mark those paths EXPLICITLY as untested in the spec (e.g., gated behind a "prod" extra, flagged "untested without live cloud access") rather than implying every workstream completed a clean real-test it didn't. Don't let one workstream's docs bleed into another's.
+6. **Run each independent workstream through its own full cycle.** spec → plan → build → test against real infrastructure. When that infrastructure isn't available, mark those paths EXPLICITLY as untested in the spec (e.g., gated behind a "prod" extra, flagged "untested without live cloud access") rather than implying every workstream completed a clean real-test it didn't. Don't let one workstream's docs bleed into another's. When you fan those workstreams out to parallel write-capable agents, see [parallel-agent-fan-out](../parallel-agent-fan-out/SKILL.md) for keeping them from colliding.
 
 ## Why
 
@@ -53,3 +53,5 @@ On the project this was distilled from — a hexagonal, human-in-the-loop AI age
 - [docs-as-deliverable](../docs-as-deliverable/SKILL.md)
 - [grounded-verifiable-gates](../grounded-verifiable-gates/SKILL.md)
 - [honest-reframing-over-overclaiming](../honest-reframing-over-overclaiming/SKILL.md)
+- [battle-testing-on-real-infra](../battle-testing-on-real-infra/SKILL.md)
+- [parallel-agent-fan-out](../parallel-agent-fan-out/SKILL.md)

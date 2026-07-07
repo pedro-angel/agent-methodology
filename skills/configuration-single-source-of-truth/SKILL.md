@@ -26,7 +26,7 @@ Red-flag thoughts that mean STOP and apply this skill:
 2. **Make consumers derive, never re-declare.** Build scripts, code, and CI read the canonical value (parse the file, import the constant, read the env var). No second hand-typed copy anywhere.
 3. **Guard with fail-fast.** When the canonical value is unset or still a placeholder, exit non-zero with an actionable message ("CLOUD_PROJECT is unset; set it in .env"). A missing value should stop the run, not silently default.
 4. **Separate "tune in config" from "change code to extend."** Behavior knobs — weights, prompts, decision thresholds, rubrics — go in one config file (e.g. YAML), so recalibrating is a config edit with zero code change. Draw the line explicitly and document it: what you tune vs. what requires a code change.
-5. **Declare one source authoritative; stop hand-maintaining parallel copies.** Point docs, tables, and examples at the canonical config and say it is the source of truth — generate them from code or config where that is feasible. Never keep a hand-maintained copy that can drift from it.
+5. **Declare one source authoritative; stop hand-maintaining parallel copies.** Point docs, tables, and examples at the canonical config and say it is the source of truth — generate them from code or config where that is feasible. Never keep a hand-maintained copy that can drift from it. This applies to release and documentation metadata as much as to config values: a version string, a coverage count, a supported-matrix table tends to sprawl across a version file, the README, a CHANGELOG, and a docs site — keep one source authoritative and derive or check the rest, because the surface a release forgets to update is precisely the one that silently goes stale.
 6. **Ship a non-secret template.** Commit `.env.example` (or equivalent) as the documented config surface, one inline comment of rationale per knob. It is the contract; secrets stay out of version control.
 7. **Resolve env-over-file at composition time.** When the same fact can come from the process environment or a file, let the real environment win and fall back to the file — resolve it once, at startup/composition, not scattered through the code.
 8. **If a fact truly must live in two places, couple them explicitly and guard it.** Add a check that validates one against the other (e.g. assert the code enum equals the YAML keys) so they cannot diverge without a loud failure.
@@ -45,6 +45,7 @@ On the project this was distilled from — a hexagonal, human-in-the-loop AI age
 - Burying tunable thresholds or prompts inside code strings, so recalibration means a code change and a deploy.
 - Maintaining a hand-written env table in the docs that drifts from the actual config defaults.
 - Duplicating a value in two files with no guard against them diverging.
+- Bumping the version and one changelog while a second changelog surface (a docs site) silently stays a release behind.
 
 ---
 
