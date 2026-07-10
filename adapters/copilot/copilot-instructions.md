@@ -31,6 +31,16 @@ back-fill process after the code. "Non-trivial" = anything beyond a one-file, fu
 - Keep *what* (SPECS: behaviors, acceptance criteria) separate from *how* (DESIGN: architecture, trade-offs) so a reviewer can reject a wrong requirement before you build for it.
 - Gate each phase behind a review and record the verdict in the doc. When code diverges, reconcile the spec onto the shipped code and bump its version. Strike through resolved open items, don't delete them.
 
+### environment-research
+
+- Before a spec or plan depends on a dependency's real behavior, state a precise hypothesis about its execution, outcome, error, and boundary modes, then write the smallest experiment that could falsify it and run it against the real thing.
+- Provoke failure modes on purpose — a mode you never triggered is one you didn't characterize. Record what you saw, not what you expected; when the observation contradicts the docs, design against the observation and write the divergence into the spec or the code.
+
+### adversarial-lens-review
+
+- An author cannot grade their own work. At the spec→plan, plan→code, and code→merge gates, dispatch a fresh reviewer per binding named lens (spec: factual-grounding, completeness, design-flaw, testability; plan: spec-coverage, testing-and-trackability, sequencing-and-anti-hubris; implementation: spec-compliance, then code-quality) instructed to enumerate problems, not fix them.
+- Require severity-graded findings (`BLOCKER`/`MAJOR`/`MINOR`) and loop until every BLOCKER and MAJOR clears. The reviewer's context must stay separate from the author's — sunk cost in the work disqualifies a reviewer.
+
 ### hexagonal-with-enforced-contracts
 
 - Isolate a framework-free domain at the center; let it speak only to **ports** (abstract interfaces). Every external system (LLM, DB, cloud SDK, HTTP API) is an **adapter** implementing a port. The domain imports no vendor SDK.
@@ -58,10 +68,20 @@ back-fill process after the code. "Non-trivial" = anything beyond a one-file, fu
 - Record the run as a named evidence artifact (results file, captured log, saved response) someone else can open. Mocks prove wiring, not external reality (auth scopes, quota, serialization, cold starts, IAM propagation).
 - Treat the spec as a hypothesis and the running system as ground truth: implement what the server does and record each divergence in the code. When a path's happy case needs infra you lack, drive the real route and assert its exact semantic rejection rather than dropping to mocks; mark a path untested only when even that is impossible, naming what's missing. Round-trip a model-backed feature through a real local model, not a mock.
 
+### acceptance-tests-observable-outcomes
+
+- Completion is defined by what a user or caller observes, not which code paths ran: for each observable success criterion in the spec, write an executable acceptance test against the real system, derived from the spec before or independent of the implementation.
+- Assert the semantic essentials (the value, the status, the substring that matters) and tolerate incidental formatting the spec never promised. Run teardown unconditionally, whether the assertions passed or failed. Treat a red or missing acceptance test, not a green unit suite, as the real "not done yet" signal.
+
 ### grounded-verifiable-gates
 
 - When an LLM or agent produces a decision or claim, convert it into a verifiable signal: grounding invariants (every claim cites a real source span; every cited id exists), a deterministic gate that yields pass/fail or a score, and a CI-able eval harness that runs the gate over a fixed corpus on every change.
 - Trust the gate's verdict over the output, never the raw model output as a result. The harness is your regression net for silent degradation.
+
+### definition-of-done-tooling
+
+- The author never self-certifies "done" — a script does. Declare every completion criterion in a small config as `required` or `n/a`, back every `required` line with a real runnable check, and run them all through one gate that emits a single GO or NO-GO.
+- Mark `n/a` as a visible, reviewable decision in the config, never a silent deletion. On NO-GO, fix the failing criterion and re-run — never edit the config to force a pass. Wrap the project's existing CI entrypoint rather than re-implementing it inline.
 
 ### honest-reframing-over-overclaiming
 
