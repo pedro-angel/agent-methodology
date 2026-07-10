@@ -25,7 +25,7 @@ If a user instruction contradicts a principle, do what the user asked; note the 
 
 ## Available skills
 
-`spec-driven-development` · `hexagonal-with-enforced-contracts` · `configuration-single-source-of-truth` · `surgical-changes-with-checkpoints` · `additive-default-off-feature-flags` · `battle-testing-on-real-infra` · `grounded-verifiable-gates` · `honest-reframing-over-overclaiming` · `evidence-over-deference` · `reversible-by-default-confirm-consequential` · `structural-security-boundary` · `secrets-and-teardown-discipline` · `docs-as-deliverable` · `decision-memory` · `autonomous-self-improvement-loop-safety` · `parallel-agent-fan-out`
+`spec-driven-development` · `environment-research` · `adversarial-lens-review` · `hexagonal-with-enforced-contracts` · `configuration-single-source-of-truth` · `surgical-changes-with-checkpoints` · `additive-default-off-feature-flags` · `battle-testing-on-real-infra` · `acceptance-tests-observable-outcomes` · `grounded-verifiable-gates` · `definition-of-done-tooling` · `honest-reframing-over-overclaiming` · `evidence-over-deference` · `reversible-by-default-confirm-consequential` · `structural-security-boundary` · `secrets-and-teardown-discipline` · `docs-as-deliverable` · `decision-memory` · `autonomous-self-improvement-loop-safety` · `parallel-agent-fan-out`
 
 ## A note on tools
 
