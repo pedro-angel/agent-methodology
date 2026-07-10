@@ -21,6 +21,7 @@ Before acting on a task:
 1. **Identify which skill(s) apply.** Match the task to the principles below — most non-trivial tasks touch two or three.
 2. **Load the full skill.** Read `skills/<slug>/SKILL.md` for each match. The paragraphs here are the index; the SKILL files carry the rules, red-flags, and worked examples.
 3. **For non-trivial work, follow the relevant process skill BEFORE implementing.** Starting a feature → run the spec chain first. Touching external systems → set up the ports and the boundary check first. Shipping an LLM decision → define the gate first. Do not write implementation code and back-fill the process.
+4. **Wire the Enforcement sections into your gates.** Every skill ends with an `## Enforcement` section naming what a machine can check for that principle — and what honestly stays judgment. Turn the checkable part into pre-commit hooks and CI jobs (git-controls-starter is the seeded library) instead of trusting discipline; every incident this pack records happened where a principle had no machine on it.
 
 "Non-trivial" means anything beyond a one-file, fully-understood change. When in doubt, treat it as non-trivial.
 

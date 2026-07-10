@@ -54,7 +54,7 @@ repos:
   - repo: local
     hooks:
       - id: check-skill-frontmatter
-        name: "every SKILL.md has name==slug + 'Use when' description"
+        name: "every SKILL.md has name==slug, 'Use when' description, Enforcement section"
         language: script
         entry: scripts/checks/check-skill-frontmatter.sh
         files: ^skills/.*/SKILL\.md$
@@ -95,6 +95,23 @@ repos:
         entry: scripts/checks/check-templates-in-sync.sh
         files: ^(templates/git-controls/|scripts/checks/|\.pre-commit-config\.yaml|\.markdownlint-cli2\.yaml|\.github/workflows/checks\.yml)
         pass_filenames: false
+      - id: check-one-pin-per-action
+        name: "every Action is SHA-pinned, one pin per action repo-wide"
+        language: script
+        entry: scripts/checks/check-one-pin-per-action.sh
+        pass_filenames: false
+      - id: check-no-private-identifiers
+        name: "no private identifier (hostname, internal name) enters the repo"
+        language: script
+        entry: scripts/checks/check-no-private-identifiers.sh
+        pass_filenames: false
+      # OPT-IN: commits touching live-surface paths must carry an Evidence: trailer.
+      # Configure EVIDENCE_PATH_REGEX in the script first (fail-closed if you don't).
+      # - id: check-evidence-trailer
+      #   name: "live-surface commits carry an Evidence: trailer"
+      #   language: script
+      #   entry: scripts/checks/check-evidence-trailer.sh
+      #   stages: [commit-msg]
       - id: check-commit-trailer
         name: "commit body carries a provenance trailer"
         language: script
