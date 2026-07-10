@@ -56,6 +56,10 @@ Adapted from cmanaha/extended-superpowers (MIT) and rewritten here as an agent-a
 - Running code-quality review before spec-compliance is clean.
 - A bare constant or threshold surviving the sequencing-and-anti-hubris lens with no stated reasoning.
 
+## Enforcement
+
+What a machine can check: the protocol, not the insight. Phase advancement blocked while any BLOCKER or MAJOR lacks a recorded resolution; findings parseable in the one severity-graded shape, with MINORs carried forward under explicit dispositions; and in agent setups the dispatch itself — one fresh reviewer per lens in the artifact's row, spec-compliance strictly before code-quality. The quality of a refutation is judgment; the completeness of the row is not.
+
 ## Related skills
 
 - [spec-driven-development](../spec-driven-development/SKILL.md)

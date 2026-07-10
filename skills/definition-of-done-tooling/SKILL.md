@@ -46,6 +46,10 @@ Adapted from cmanaha/extended-superpowers (MIT), rewritten here without any refe
 - Letting the gate re-implement CI inline instead of wrapping the existing entrypoint, so the two drift apart.
 - The artifact's own author asserting "done" without having run the script.
 
+## Enforcement
+
+This skill is the enforcement shape the others plug into, and it is machine-checkable by construction: criteria declared one per line as `required` or `n/a`, every `required` backed by a runnable command, one script emitting a single GO/NO-GO, wrapping the CI entrypoints it certifies rather than re-implementing them. Guard the gate itself: the config is reviewed like code — editing the exam is the named anti-pattern — and a meta-check asserts that no `required` criterion points at nothing.
+
 ## Related skills
 
 - [acceptance-tests-observable-outcomes](../acceptance-tests-observable-outcomes/SKILL.md)

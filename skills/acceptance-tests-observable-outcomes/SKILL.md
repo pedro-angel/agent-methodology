@@ -46,6 +46,10 @@ Adapted from cmanaha/extended-superpowers (MIT), rewritten here as a general tes
 - Trusting a single non-deterministic pass as proof.
 - Claiming "done" with the acceptance test still unwritten or still red.
 
+## Enforcement
+
+What a machine can check: that the suite exists, runs against the real surface, and cleans up. A named acceptance stage separate from the unit run, failing closed when zero acceptance tests are collected; unconditional teardown proven by a deliberately-failing test that still leaves the substrate clean; repeat-run thresholds encoded in the runner for non-deterministic paths. Whether an assertion matches the spec's observable criterion is judgment — reviewable because each test names the criterion it asserts.
+
 ## Related skills
 
 - [battle-testing-on-real-infra](../battle-testing-on-real-infra/SKILL.md)

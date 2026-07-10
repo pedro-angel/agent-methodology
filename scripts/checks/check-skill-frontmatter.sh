@@ -20,8 +20,10 @@ for f in skills/*/SKILL.md; do
     echo "FAIL $f: frontmatter 'name:' missing or != dir slug '${slug}'"; status=1; }
   printf '%s\n' "$fm" | grep -qE '^description: Use when ' || {
     echo "FAIL $f: 'description:' must start with 'Use when '"; status=1; }
+  grep -q '^## Enforcement$' "$f" || {
+    echo "FAIL $f: missing '## Enforcement' section (what a machine can check for this principle)"; status=1; }
 done
 if [ "$status" -eq 0 ]; then
-  echo "ok: skill frontmatter (name==slug, description starts 'Use when')"
+  echo "ok: skill frontmatter (name==slug, 'Use when' description, Enforcement section)"
 fi
 exit "$status"

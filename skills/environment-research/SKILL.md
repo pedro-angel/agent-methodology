@@ -49,6 +49,10 @@ Adapted from cmanaha/extended-superpowers (MIT), rewritten here as a general res
 - Discovering a divergence between docs and reality and letting it live only in chat history instead of the spec or the code.
 - Treating "I'll find out in QA" as a substitute for a five-minute probe now.
 
+## Enforcement
+
+What a machine can check: the residue, not the curiosity. A recorded observation everywhere a design claim leans on a dependency — a dated research entry in the spec (structure lint), the divergence written into the code the next caller reads, a decision-memory note pinning the exact version probed. The probe script is disposable by rule 7; what fails closed is a spec claiming dependency behavior with no observation behind it — the factual-grounding lens of [adversarial-lens-review](../adversarial-lens-review/SKILL.md) reviews exactly that.
+
 ## Related skills
 
 - [spec-driven-development](../spec-driven-development/SKILL.md)
