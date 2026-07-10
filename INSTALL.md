@@ -11,9 +11,19 @@ adapters/claude/CLAUDE.md         # thin shim: "read AGENTS.md, load the matchin
 adapters/cursor/methodology.mdc
 adapters/copilot/copilot-instructions.md
 adapters/gemini/GEMINI.md
+templates/methodology-sync.yml    # weekly sync-bot workflow for repos that vendor the pack
+templates/git-controls/           # offline-vendorable copy of the git controls; their distribution home is the standalone git-controls-starter repo — prefer consuming remotely from there (its README, mode 1)
 ```
 
 `AGENTS.md` holds the methodology. Every adapter is a few lines that say "read `AGENTS.md`, find the matching skill(s), load `skills/<slug>/SKILL.md` before acting." You edit `AGENTS.md` and the `SKILL.md` files; you almost never touch an adapter. That is what keeps one pack working across every agent.
+
+## Installing alongside the git controls
+
+This pack and [git-controls-starter](https://github.com/pedro-angel/git-controls-starter)
+are complementary and don't overlap: the starter owns the git gate
+(`.pre-commit-config.yaml`, `scripts/checks/`, CI workflows), this pack owns the prose
+(`AGENTS.md`, `skills/`, agent adapters). Install in either order; for the controls,
+prefer the starter's remote-consumption mode (its README, mode 1).
 
 ## Setup
 
@@ -30,7 +40,7 @@ Copy the source of truth and the skills to the target project root:
 
 ```bash
 cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
-cp -R "$PACK/skills" "$PROJECT/skills"
+mkdir -p "$PROJECT/skills" && cp -R "$PACK/skills/." "$PROJECT/skills/"
 ```
 
 That is the minimum viable install. `AGENTS.md` at the repo root is an emerging cross-agent convention. OpenAI Codex reads it natively, so for Codex this single step is the whole install; a growing set of other tools support the convention but may need a one-line pointer to it (for example, Aider loads it only when you pass `--read AGENTS.md` or add it to `.aider.conf.yml`) — check your agent's docs. The per-agent adapter in Step 2 covers agents that look for their own instruction file first.
@@ -53,7 +63,17 @@ mkdir -p "$PROJECT/.claude/skills" && cp -R "$PACK/skills/." "$PROJECT/.claude/s
 
 # or, available across all your projects:
 mkdir -p ~/.claude/skills && cp -R "$PACK/skills/." ~/.claude/skills/
+
+# or — best for the pack's own developer — symlink per slug instead of copying,
+# so `git pull` in the pack updates every project on the machine instantly:
+mkdir -p ~/.claude/skills
+for d in "$PACK"/skills/*/; do ln -sfn "$d" ~/.claude/skills/"$(basename "$d")"; done
 ```
+
+Pick **one** discovery location: with skills installed at the user level, also keeping a
+copy in `$PROJECT/.claude/skills/` gives the agent duplicates of every skill. Projects on
+a machine with the user-level install should drop the project-level copy (the repo can
+still vendor `skills/` for other agents and contributors — that path is not auto-loaded).
 
 ### Cursor
 
@@ -103,10 +123,28 @@ Caveat: a committed symlink with an absolute target breaks for any collaborator 
 
 ## Updating
 
-- **Copied install:** re-run the Step 1 and Step 2 commands — `cp` overwrites in place.
-- **Symlink or submodule:** pull the pack (`git -C "$PACK" pull`, or `git submodule update --remote`); every linked project picks up the change with nothing to re-run.
+Three modes, by how updates reach the project:
+
+- **Copied install (manual):** re-run the Step 1 and Step 2 commands — `cp` overwrites in place. Fine for a one-off; in practice manually-synced copies go stale fast (field data: three times in one week).
+- **Symlink or submodule (always-current):** pull the pack (`git -C "$PACK" pull`, or `git submodule update --remote`); every linked project picks up the change with nothing to re-run. Best on the pack developer's own machines.
+- **Sync bot (copied + weekly PR):** for shared repos that must vendor real files, add [`templates/methodology-sync.yml`](templates/methodology-sync.yml) as `.github/workflows/methodology-sync.yml`. Every week (or on manual dispatch) it re-syncs `AGENTS.md`, `skills/`, and the adapter from this pack's main and opens a PR only when something changed — drift becomes a reviewable diff instead of a silent gap. Verified live: a dispatch on an in-sync repo runs green and opens nothing.
 
 Because the principles live only in `AGENTS.md` and the `SKILL.md` files, an update never has to touch a per-agent adapter.
+
+## Migrating between modes
+
+- **Copied → sync bot:** just add the workflow (above). Its first run PRs the delta between your copy and current main — merging that PR *is* the catch-up.
+- **Copied → symlink:** `git rm -r` the vendored files, then create the links from the symlink section. Only for repos that never leave machines where `$PACK` exists.
+- **Symlink → copied (a collaborator joined):** delete the links **first**, then re-run the copy commands from Steps 1–2, commit the real files, and add the sync bot so the new copies don't rot. (Order matters: copying onto an existing symlinked destination follows the link and writes into the pack itself.)
+
+  ```bash
+  rm "$PROJECT/AGENTS.md" "$PROJECT/CLAUDE.md" "$PROJECT/skills"   # remove links, not content
+  cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
+  mkdir -p "$PROJECT/skills" && cp -R "$PACK/skills/." "$PROJECT/skills/"
+  cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"
+  ```
+
+- **Trimming a dual install:** if skills are discoverable both user-level (`~/.claude/skills`) and project-level (`.claude/skills/`), keep the user-level one and `git rm -r .claude/skills` — the repo's `skills/` directory (for other agents and contributors) is unaffected.
 
 ## Verify it took
 
