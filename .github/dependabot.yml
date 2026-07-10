@@ -11,3 +11,8 @@ updates:
       prefix: "ci"
     labels:
       - "dependencies"
+    # One grouped PR per weekly sweep instead of one PR per action.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
