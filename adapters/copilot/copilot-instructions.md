@@ -51,6 +51,12 @@ back-fill process after the code. "Non-trivial" = anything beyond a one-file, fu
 - Collapse every value that would otherwise be duplicated (project id, model name, threshold, rubric, region) to one authoritative source.
 - Read it at one layer and pass it down; never re-declare it in build scripts, docs, and code. "What value is in effect?" must have exactly one answer.
 
+### dev-environment-facade
+
+- One dev-workflow surface: a self-documenting Makefile (bare `make` prints annotated help) whose recipes are one-liners delegating to `scripts/`; where the facade and a certifying gate share a command, the strings stay character-identical and grep-checked.
+- Split env files by owner: the provisioning script is the only writer of the machine file (atomic rename; keep a still-valid credential, validated against an endpoint probed to discriminate); no script ever writes or deletes the user file.
+- Consumers load env in-process at fixture time (never conftest import — collection imports deselected conftests), shell env wins with a warning on differing shadows; absent env file → skip, present-but-broken → hard fail, so a gate can't pass on zero executed tests.
+
 ### surgical-changes-with-checkpoints
 
 - Change exactly what the task requires and nothing more. Restate the goal in one sentence, touch only what that sentence demands, and note unrelated improvements separately. Match surrounding conventions.
