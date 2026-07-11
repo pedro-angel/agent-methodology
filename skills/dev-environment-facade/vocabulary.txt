@@ -1,13 +1,16 @@
 # Machine-readable target vocabulary for the dev-environment facade.
-# Consumed by conformance checkers (see SKILL.md "Enforcement"); the prose
-# in SKILL.md carries each name's promise and defines the capability tokens.
+# Consumed by conformance checkers — reference implementation:
+# vocabulary-conformance.sh beside this file (see SKILL.md "Enforcement");
+# the prose in SKILL.md carries each name's promise and defines the
+# capability tokens.
 # Format (tab-separated): <tier>	<name>	[capability]	[role]
 #   tier:       universal | family | prefix | banned
 #   capability: token naming the marker that makes a family name required
 #               ("-" = always fires; used when a universal name carries a
 #               role)
-#   role:       floor    — recipe must appear in `make -n check` expansion
-#                          whenever the capability fires
+#   role:       floor    — expanded commands (`make -n <name>`) must appear
+#                          in `make -n check`'s output whenever the
+#                          capability fires
 #               mutating — optional (allowed, never required); must never
 #                          run inside `check`
 #               optional — allowed, not required, when the capability fires
