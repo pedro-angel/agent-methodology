@@ -1,6 +1,6 @@
 ---
 name: dev-environment-facade
-description: Use when wiring a project's dev workflow (local stack, test tiers, gates, docs) — build a thin self-documenting Makefile facade over real scripts, and split env files by owner so targets consume them but never write them.
+description: Use when wiring a project's dev workflow (local stack, test tiers, gates, docs), or when naming make targets in a repo that has siblings — build a thin self-documenting Makefile facade over real scripts, name targets from the shared cross-repo vocabulary, and split env files by owner so targets consume them but never write them.
 ---
 
 # One Entry Point, Zero Ownership Confusion
@@ -26,6 +26,7 @@ Red-flag thoughts — if you catch yourself thinking any of these, STOP:
 - "The recipe can just `source` the env file." (Shell-sourcing hand-edited files couples correctness to shell syntax; load in-process.)
 - "The suite skipped, and skipped is green." (A certifying gate that passes on zero executed tests is a hole.)
 - "Any 200 from the service proves the credential works." (Probe the endpoint — some are auth-blind.)
+- "The script calls it `up`, so the target is `stack-up`." (Names come from the vocabulary; a borrowed verb must deliver at least its home meaning and destroy nothing that meaning leaves intact.)
 
 ## The rule
 
@@ -34,7 +35,10 @@ Red-flag thoughts — if you catch yourself thinking any of these, STOP:
    self-documenting: `.DEFAULT_GOAL := help`, every target annotated with a
    `## description`, help rendered by a grep/awk over `$(MAKEFILE_LIST)` —
    and the grep's character class must include digits, or a target like
-   `e2e` silently vanishes from the help.
+   `test-e2e` silently vanishes from the help. Every facade target is
+   `.PHONY` — vocabulary names (`build`, `docs`, `test`) shadow common
+   directory names, and a non-phony target silently reports a directory
+   "up to date" instead of keeping its promise.
 2. **Mirror gate commands character-identically, and check the mirror.**
    Where the facade and a certifying gate run the same command, the strings
    must be byte-identical in both files, enforced by a `grep -F` loop —
@@ -64,6 +68,98 @@ Red-flag thoughts — if you catch yourself thinking any of these, STOP:
 6. **Destructive verbs never touch user-owned files**, and the destructive
    target's own `## help` line carries the warning about what it does
    delete.
+7. **One vocabulary across sibling repos, semantics attached.** Target
+   names come from the shared vocabulary below, not from whatever the
+   wrapped tool calls the operation — a backend's verb is acceptable only
+   while the target delivers at least what the verb means at home and
+   destroys nothing the verb's home meaning leaves intact. A name that
+   appears in more than one repo is a contract: same name, same promise,
+   everywhere — `make check` certifying security scans in one repo while
+   omitting them in the sibling is the failure this rule exists to
+   prevent.
+
+## The target vocabulary
+
+Promises are minimums — a repo may hold its target to more (a coverage
+floor on `test`, a linkcheck inside `docs`), never to less: green must
+never mean less than the name promises. Three tiers, by how strongly a
+name is standardized (machine-readable list: `vocabulary.txt` beside this
+file):
+
+1. **Universal — every facade, identical promise.** `help` (default goal;
+   lists every target), `setup` (bare clone → working toolchain:
+   dependencies plus hooks; the stack is `stack-start`'s job), `test` (the
+   unit suite: fast, no external dependencies; unit's target *is* `test` —
+   there is no `test-unit`, and `test` never runs other tiers), `check`
+   (the local PR gate — its floor below), `clean` (generated caches and
+   artifacts only), `dod` (the Definition-of-Done gate, GO/NO-GO; a repo
+   with no gate yet fails here with instructions — a stub that exits 0 is
+   rule 5's hole wearing a new name; the same ruling covers a `test` with
+   no unit suite behind it). "Every" is scoped: every repo that
+   ships this facade — a repo with no dev workflow gets no facade, not a
+   facade of stubs.
+2. **Family verbs — none present without its capability; required
+   exactly when it fires unless the manifest role says `optional` or
+   `mutating` (see Enforcement); absence always beats rebinding.** Local stack:
+   `stack-start` / `stack-stop` (non-destructive; data survives) /
+   `stack-status` / `stack-destroy` (destructive — rule 6's help-line
+   warning applies). Test tiers: `test-<tier>`, an open family
+   (`test-integration`, `test-contract`, `test-e2e`, `test-benchmark`, a
+   project's `test-python-matrix`) — the prefix is reserved for
+   test-running targets, a tier target provisions the stack state it
+   needs through the stack verbs, and a bare tier name (`e2e`,
+   `contract`, `benchmark`) is never a target. Ship: `build` produces
+   *and validates* everything the repo ships — wheel plus twine check,
+   image plus smoke test; wanted granularity joins the prefix
+   (`build-wheel`, `build-image`) with `build` composing them, and
+   multi-step recipes delegate to a script per rule 1. Quality leaves,
+   each with its own promise: `lint` (the repo's static analyzers in one
+   shot — style, types, architecture contracts; security stays out, and
+   analyzers `hooks` already certifies need not re-run: jointly the two
+   leaves cover the set),
+   `fix` (apply every auto-fix the analyzers or the hook manager offer;
+   mutates the tree; never part of `check`), `audit` (dependency vulnerability scan), `sast` (static
+   security scan of first-party code), `hooks` (run every configured
+   commit hook against all files — named for the capability, not for
+   whichever hook manager currently provides it). Docs: `docs` (strict
+   build; warnings fail), `docs-serve` (live reload). `clean-all`:
+   `clean` plus the toolchain `setup` created (the venv or equivalent) —
+   never `.git/hooks`, which may hold user-authored hooks, and never the
+   stack or its volumes (that is `stack-destroy`) — destructive, so rule
+   6's help-line warning applies to it too.
+3. **Project-specific — free naming, two constraints.** Never bind a
+   universal or family name — or a reserved prefix (`test-`, `stack-`,
+   `build-`; the manifest's `prefix` tier) — to different semantics, and
+   no alias targets: a promise answers to one name.
+   Extensions may join a family prefix as tier-3 names (`stack-seed`,
+   `stack-env`); a concept a second repo needs gets promoted to family
+   tier *here*, in the methodology, not standardized ad hoc between
+   repos.
+
+**`check`'s floor.** `check` runs, at minimum, every *read-only* quality
+leaf whose capability fires — `lint`, `audit`, `sast`, `hooks`, never the
+mutating `fix` — plus the unit suite and, where docs exist, the strict
+docs build. The floor keys to capability markers, not to the target list:
+deleting the `audit` target does not shrink the floor, only losing the
+capability does. It is deliberately *not* defined as "everything my CI
+runs": a repo whose CI skips security scans would then compliantly skip
+them too, and the sibling divergence this vocabulary exists to prevent
+would survive full compliance. CI may gate more than `check`, never less
+— though comparing CI against the floor is review's job, alongside
+promise-sameness. Compose `check` from the leaf targets — the command
+strings then live once, in the leaf recipes, which is also where rule 2's
+gate mirror greps them.
+
+Verb overlap with a backend is not the sin; a borrowed word that warns
+of less than the target destroys is. `stack-stop` coincides with
+compose's `stop` exactly; `stack-start` promises *more* than compose's
+`start` (which only restarts, never creates) — excess in the
+non-destructive direction, which is safe. Compose's own `down`, though,
+leaves volumes intact, so a volume-deleting `stack-down` destroys what
+its borrowed word promises to spare; that pair is why the stack family
+says `destroy`, which needs no glossary. Borrow a backend's word only
+when the target delivers at least what the word means at home *and*
+destroys nothing the word's home meaning leaves intact.
 
 ## Why
 
@@ -94,7 +190,17 @@ review findings became rules here: an import-time loader was reproduced
 bricking plain unit runs (collection imports deselected conftests — rule 4's
 "fixture time" is not a style preference), and the switch from shell-sourcing
 to `setdefault` silently *inverted* precedence for anyone with a stray
-`KIBANA_URL` export — hence rule 4's shadow warning.
+`KIBANA_URL` export — hence rule 4's shadow warning. A fourth event turned
+naming into a rule: the first two builds, sharing an author and this
+methodology, had drifted apart — `stack-up/stack-down` in one, `stack-start/
+stack-destroy` in the other; bare `e2e` versus `test-integration`; `image`
+where the vocabulary says `build`; a missing `dod`; and, the finding that
+mattered, a `check` that certified security scans in one repo while
+omitting them in its sibling — invisibly to anyone habituated to the
+sibling's `check`, since each repo faithfully mirrored its own CI (which
+is why the floor is defined by content, not by CI). The vocabulary above
+is the prescriptive reconciliation of that drift: at the time of writing
+both repos still carry it, and migration follows the skill.
 
 ## Anti-patterns
 
@@ -109,6 +215,11 @@ to `setdefault` silently *inverted* precedence for anyone with a stray
 - Skip-on-broken-state: treating a present-but-keyless env file the same as
   no file at all.
 - A help grep whose character class silently hides targets with digits.
+- Deriving target names from the backend instead of the vocabulary —
+  `stack-up` because compose says `up`, or a destructive `stack-down`
+  whose borrowed word promises less than it deletes.
+- The same universal name making different promises in sibling repos — a
+  `check` that runs security scans in one and skips them in the next.
 
 ## Enforcement
 
@@ -119,7 +230,45 @@ script; a grep proves no recipe or gate line writes the env files (the
 provisioning script is the only writer); the certifying gate's suite runs
 assert `passed ≥ 1` and `skipped = 0` in their logs; and the broken-state
 path is provoked in acceptance — env file present but keyless must yield a
-hard failure, file absent must yield the skip.
+hard failure, file absent must yield the skip. For the vocabulary, the
+machine checks names and composition — whether two repos' same-named
+targets keep the same *promise* is review's job, and the checker should
+not pretend otherwise. The canonical list is this skill's
+`vocabulary.txt` (tiers universal/family/prefix/banned, plus per-name
+capability and role columns); checkers consume that file, never a
+hand-copied list. Name checks run against the Makefile's real target
+namespace (`make -qp`'s database — parse the output and ignore the exit
+status, nonzero by design under a phony default goal), not the help text
+— an unannotated compatibility alias hides from help but not from the
+database — matched anchored on exact names: every universal name
+present, no banned name present, `test-integration` never satisfying a
+check for `test`, and for every target under a manifest `prefix` row the
+bare remainder (`python-matrix` from `test-python-matrix`) derived and
+asserted absent — that derivation is all a checker does with prefix
+rows; rebinding judgments stay with review. The help check stays for
+legibility (rule 1: every target listed and annotated). Family
+names are required exactly when their capability marker fires, unless
+the manifest role says `optional` or `mutating` (then allowed, never
+required); the manifest's tokens mean: stack = a compose file or a
+committed stack-managing script (a non-compose stack a checker cannot
+detect falls to review); suite = the tier's suite registered in the
+repo's test config (a directory or marker); ship = a packaging manifest
+declaring a shippable artifact (a pyproject `[project]` table, a
+package.json, a Dockerfile); analyzers = static-analyzer config outside
+the hook config (when `hooks` certifies the full set, `lint` may be
+absent); autofix = any analyzer or hook config that offers auto-fixes;
+deps = a dependency manifest; source = first-party code; hookcfg = a
+hook-manager config; docs = a docs build config; env = `setup` creates
+a toolchain directory (a venv or equivalent). `check`'s floor
+derives from the manifest's `floor` role: each such name whose
+capability fires must have its recipe strings appear in `make -n check`'s
+expansion (`-n` prints recipes, not target names; `+`-prefixed and
+`$(MAKE)` lines still run under it) — and rule 2's `grep -F` mirror
+greps the *leaf* recipes, where each command string lives once. A repo
+has adopted the vocabulary when the conformance check runs green in its
+own CI; the reference checker ships beside the manifest, built and
+battle-tested by the first migration — until it lands, this paragraph is
+its spec.
 
 ## Related skills
 
