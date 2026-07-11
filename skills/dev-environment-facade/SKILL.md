@@ -199,8 +199,16 @@ mattered, a `check` that certified security scans in one repo while
 omitting them in its sibling — invisibly to anyone habituated to the
 sibling's `check`, since each repo faithfully mirrored its own CI (which
 is why the floor is defined by content, not by CI). The vocabulary above
-is the prescriptive reconciliation of that drift: at the time of writing
-both repos still carry it, and migration follows the skill.
+is the prescriptive reconciliation of that drift, and the first
+migration (the MCP server) has since landed it: the reference checker
+ran RED against the drifted Makefile — eighteen violations — the
+migration turned it GREEN, and the full gate certified the result
+against the live stack. The checker itself supplied one more lesson in
+this skill's own spirit: its first draft failed *open* — a single
+trailing space in a manifest row silently dropped a floor leaf from
+enforcement — which is why the shipped checker normalizes its input and
+hard-fails on unknown tiers, roles, and capability tokens. The library's
+migration follows.
 
 ## Anti-patterns
 
@@ -220,6 +228,8 @@ both repos still carry it, and migration follows the skill.
   whose borrowed word promises less than it deletes.
 - The same universal name making different promises in sibling repos — a
   `check` that runs security scans in one and skips them in the next.
+- A conformance checker that fails open — a malformed manifest row
+  silently skipping the very check it names.
 
 ## Enforcement
 
@@ -241,8 +251,9 @@ namespace (`make -qp`'s database — parse the output and ignore the exit
 status, nonzero by design under a phony default goal), not the help text
 — an unannotated compatibility alias hides from help but not from the
 database — matched anchored on exact names: every universal name
-present, no banned name present, `test-integration` never satisfying a
-check for `test`, and for every target under a manifest `prefix` row the
+present *and expanding to at least one command* (a `.PHONY` ghost whose
+rule was deleted is rule 5's green-on-nothing hole), no banned name
+present, `test-integration` never satisfying a check for `test`, and for every target under a manifest `prefix` row the
 bare remainder (`python-matrix` from `test-python-matrix`) derived and
 asserted absent — that derivation is all a checker does with prefix
 rows; rebinding judgments stay with review. The help check stays for
@@ -260,15 +271,26 @@ absent); autofix = any analyzer or hook config that offers auto-fixes;
 deps = a dependency manifest; source = first-party code; hookcfg = a
 hook-manager config; docs = a docs build config; env = `setup` creates
 a toolchain directory (a venv or equivalent). `check`'s floor
-derives from the manifest's `floor` role: each such name whose
-capability fires must have its recipe strings appear in `make -n check`'s
-expansion (`-n` prints recipes, not target names; `+`-prefixed and
-`$(MAKE)` lines still run under it) — and rule 2's `grep -F` mirror
-greps the *leaf* recipes, where each command string lives once. A repo
+derives from the manifest's `floor` role: for each such name whose
+capability fires, every command `make -n <name>` prints must appear in
+`make -n check`'s output — both sides expanded, so leaf recipes may use
+make variables, *except* the strings rule 2 mirrors into a certifying
+gate: those stay literal, because that mirror is byte-level and greps
+the *leaf* recipes, where each command string lives once. A repo
 has adopted the vocabulary when the conformance check runs green in its
-own CI; the reference checker ships beside the manifest, built and
-battle-tested by the first migration — until it lands, this paragraph is
-its spec.
+own CI. The reference checker ships beside the manifest
+(`vocabulary-conformance.sh`, battle-tested by the first migration): it
+matches names literally, reads the real target database, and fails
+closed — a malformed manifest row is a hard error, never a silent skip.
+Its limits are deliberate and stated: GNU make with the Makefile at the
+repo root; no target the checker expands may invoke make or carry `+`
+recipes (`$(MAKE)` and `+` lines execute under `-n`; a literal make
+defeats the chatter filter — the guard covers every expanded target and
+one level into `check`, deeper recursion is the adopter's to prevent,
+and `-qp` already runs `$(shell)` at parse time); and rule 2's
+facade↔gate mirror loop is not its job — that stays a per-repo
+acceptance check. Consuming repos execute the vendored copy — a forked
+checker freezes its parser off the sync path.
 
 ## Related skills
 
