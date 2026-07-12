@@ -1,0 +1,4 @@
+IMPLEMENTATION REVIEW — stage 1 re-runs after skill-text fixes
+Delta pass r2 (post rule-split): gaps — 1 MAJOR: REQ-12 "every new rule carries the field finding" unmet for new rule 3 (attribution narrowed to rule 2 during split); MINORs: tier-a phrasing weakened vs REQ-5(a); DESIGN E-blocks stale; copilot placement (recorded deliberate); commit-stage pendings.
+Fixes applied: In-practice attribution widened to rules 2 and 3 with rule 3's forcing finding (per-turn concession drift); tier-a restored to mandatory behavioral silence ("say nothing about alternatives — no weighing prose at all"); DESIGN reconciled to v3 (all blocks = shipped text).
+Delta pass r3: VERDICT CLEAN — REQ-12 satisfied for both rules; REQ-5(a) silence verbatim-near; rule 2 byte-unchanged; AC-6/AC-7 tokens re-verified; REQ-6c untouched; validators pass. Only commit-stage checks (REQ-15/AC-5/AC-8) remain open, dischargeable at commit time.
