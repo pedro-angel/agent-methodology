@@ -1,0 +1,17 @@
+====================== factual ======================
+VERDICT: needs-fixes — REQ-1's load-bearing "routing failure" rationale cites the wrong RESEARCH section (§2, the sync-surface set) instead of the evidence that supports it (RESEARCH §5 R0(1) / BRIEF Problem); all other file:line citations, probe evidence, and precedent claims verified correct against the repo.
+[MAJOR] SPECS.md:17-18 (REQ-1 rationale)
+  P: The citation "(RESEARCH §2, §6 Q1)" does not support the claim "the original failure was a routing failure — body-only coverage reproduces it." RESEARCH §2 is the sync-surface section (AGENTS.md/README/adapter prose paraphrases) and says nothing about description-vs-body routing of skill invocation; §6 Q1 concerns case-(c) distinctness from "performative agreement." The actual support is RESEARCH §5 R0(1) ("the trigger cannot reach the failure") and the BRIEF's Problem section.
+  F: Re-cite RESEARCH §5 R0(1) (and BRIEF Problem); if "the description is what routes invocation" is load-bearing, state its basis explicitly rather than pointing at §2.
+[MINOR] SPECS.md:110 (AC-7..9 preamble)
+  P: "phase 6" is not a phase the methodology defines — spec-driven-development (skills/spec-driven-development/SKILL.md:28) names a five-phase chain (BRIEF→RESEARCH→SPECS→DESIGN→TASKS) with no numbered phases — and "skill-trigger evals" is not an existing repo mechanism.
+  F: Replace "phase 6" with a described stage (post-TASKS implementation/validation) and mark the eval harness as a mechanism DESIGN/TASKS must define.
+[MINOR] SPECS.md:41-42 (REQ-5)
+  P: "evidence-over-deference rule 5" is cited as house precedent for an in-rule triviality floor, but rule 5 ("re-raising it every turn is nagging, not honesty", skills/evidence-over-deference/SKILL.md:29) limits repetition frequency, not triviality; the only verified triviality-floor precedent is decision-memory rule 7 ("only when it matters... needs no ceremony").
+  F: Drop rule 5 from the precedent list or reframe it as precedent for "in-rule anti-over-fire clauses" generally.
+[MINOR] SPECS.md:134-135 (Decision log)
+  P: "Maintainer lean confirmed in session" is unrecorded in any artifact and misattributes the lean: BRIEF:118-121 marks R1 as the brief author's lean ("My lean is R1... the maintainer... is better positioned to call it"), and the maintainer amendment (BRIEF:9-32) reshapes the goal without choosing among R0/R1/R2.
+  F: Attribute the lean to the brief author and either cite where the maintainer's in-session confirmation is recorded or state explicitly that this decision-log entry is the maintainer's ratification record.
+[MINOR] SPECS.md:104-105 (AC-5)
+  P: "the diff touches exactly the six files of REQ-10/REQ-11" is not self-consistent: REQ-10 enumerates five files (four sync targets + honest-reframing footer) and REQ-11 names zero; the sixth file (skills/evidence-over-deference/SKILL.md) is only implied.
+  F: Enumerate all six absolute-in-repo paths explicitly in AC-5 (or in REQ-10) so the criterion is checkable without inference.

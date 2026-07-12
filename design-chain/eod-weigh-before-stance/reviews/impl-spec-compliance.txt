@@ -1,0 +1,8 @@
+IMPLEMENTATION REVIEW — stage 1: spec-compliance (fresh reviewer, working-tree diff vs SPECS v4 + DESIGN v2)
+VERDICT: clean — no BLOCKER/MAJOR. All REQ-1..14 verified against the diff; E-blocks byte-matched; renumbered rules 3-6 byte-identical to old 2-5 modulo numbers. Machine checks re-verified independently (AC-2/3/4/6/7).
+Named duties: (i) AC-6 polarity/theater semantics PASS; (ii) REQ-6c narrow waiver wording PASS; (iii) REQ-14 Why calibration semantics PASS. (Full reasoning in session log.)
+MINORS + dispositions:
+1. Red-flag bullet inserted (not appended) before "(Symmetrically)" pair — DELIBERATE: keeps the two symmetric bullets adjacent; counts/tokens unaffected.
+2. Copilot bullet second (not fourth) — DELIBERATE: conversational chronology (check → weigh → decide), matching the rule order; anchoring/tokens unaffected.
+3. REQ-15/AC-5/AC-8 pending until commit time — by design (Task 6).
+4. AC-1 not run by reviewer (auto-fix hooks would modify files) — run by author post-edit: exit 0, all hooks Passed; re-run again at Task 6.
