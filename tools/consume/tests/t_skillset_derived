@@ -9,8 +9,9 @@ sha=$(git -C "$p" rev-parse HEAD)
 out="$p/mat"
 "$TOOLS/materialize.sh" "$p" "$sha" "$out" >/dev/null 2>&1 || { scrub "$p"; fail "materialize failed"; }
 got=$(tr '\n' ' ' <"$out/.skillset")
+expected=$(printf '%s\n' alpha beta gamma | tr '\n' ' ')
 scrub "$p"
-[ "$got" = "alpha beta gamma " ] || fail ".skillset is not the sorted derived set: '$got'"
+[ "$got" = "$expected" ] || fail ".skillset is not the sorted derived set: '$got'"
 
 # repo-wide: a tracked *.skillset would re-introduce the hand-maintained drift surface
 repo=$(cd "$(dirname "$0")/../../.." && pwd)
