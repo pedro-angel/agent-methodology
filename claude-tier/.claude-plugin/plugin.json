@@ -1,5 +1,8 @@
 {
   "name": "agent-methodology-claude",
-  "version": "0.0.0",
-  "description": "Claude-specific methodology tier (scaffold). Skills that only make sense in the Claude runtime land here; runtime consumption is wired when the first such skill exists."
+  "description": "Claude-specific methodology tier (scaffold, initially skill-less).",
+  "author": {
+    "name": "pedro-angel",
+    "url": "https://github.com/pedro-angel/agent-methodology"
+  }
 }
