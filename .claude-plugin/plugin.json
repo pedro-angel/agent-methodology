@@ -1,0 +1,5 @@
+{
+  "name": "agent-methodology",
+  "version": "0.0.0",
+  "description": "Portable engineering methodology — the agent-agnostic skills tier. The pin of record is the git commit SHA a consumer materializes, not this version field."
+}

@@ -1,0 +1,5 @@
+{
+  "name": "agent-methodology-claude",
+  "version": "0.0.0",
+  "description": "Claude-specific methodology tier (scaffold). Skills that only make sense in the Claude runtime land here; runtime consumption is wired when the first such skill exists."
+}
