@@ -1,12 +1,14 @@
 # RESEARCH — probes behind the packaging/consumption model
 
-*Status: mechanical convenience properties observed; **trust properties NOT yet probed** (backlog below).
+*Status: **value-prop + trust mechanics now OBSERVED** — P5/P6/P7/P8/P9/P10 run 2026-07-18, captured verbatim
+in [experiments/probe-run-2026-07-18.md](experiments/probe-run-2026-07-18.md) (Claude Code 2.1.214). Only
+P11 (marketplace, doc-only) and P12 (signature, deferred by F4) remain un-run.
 Consumes: [BRIEF.md](BRIEF.md). Feeds: SPECS. Date: 2026-07-18. Method: `environment-research` — small
 real experiments against the actual agent runtime (Claude Code), observation outranks documentation where
 they disagree. Adversarial round 1 corrected this doc's overclaims (see
-[reviews/adversarial-round-1.md](reviews/adversarial-round-1.md)); it now separates what was **observed**
-from what is **assumed** or **doc-only**. Probe labels P2/P3/P4 are inherited from the prior research
-iteration; P5+ are this chain's backlog.*
+[reviews/adversarial-round-1.md](reviews/adversarial-round-1.md)); it separates what was **observed** from
+what is **assumed** or **doc-only**. Probe labels P2/P3/P4 are inherited from the prior research iteration;
+P5–P12 are this chain's backlog, now largely discharged.*
 
 ## Why probe at all
 
@@ -91,38 +93,42 @@ untested — and that last one is exactly what the boot check depends on.
 | Bad/absent target fails safe (silent, clean, exit 0) | mechanical | ✅ observed (P2C/P3) — motivates the boot check |
 | A plugin can be namespaced + symlink-swapped | mechanical | ✅ observed for a **single-skill toy** (P3) |
 | One `SessionStart` hook fires through the symlink | mechanical | ✅ observed once (P4) |
-| **One per-tier symlink resolves EVERY skill; a new skill needs no new link** | mechanical | ❌ **hypothesis** — never observed (P5) |
-| A **tag** (vs working tree) is the pinned surface | trust | ❌ not probed; the tag pin as drafted was **falsified** (P7) |
-| An **immutable, SHA-pinned, signed** materialization resists out-of-band mutation | trust | ❌ not probed (P7) |
-| A re-pointed / `--force` tag is rejected **loudly** | trust | ❌ not probed; reviewers observed **silent** divergence (P8) |
-| The boot check **fires** when the tier is absent/partial | trust | ❌ not probed (P9) |
-| Real multi-skill pack packages cleanly at scale | mechanical | ❌ not probed (P10) |
-| Marketplace skips outside-symlinks | mechanical | ❌ doc-only (P11) |
+| **One per-tier symlink resolves EVERY skill; a new skill needs no new link** | mechanical | ✅ **observed** (P5, 2→3 skills, no new link) |
+| An immutable, read-only, SHA-pinned materialization of a commit is the pinned surface | trust | ✅ observed (P7 — no `.git`, read-only blocks edit) |
+| The materialization resists out-of-band mutation | trust | ✅ observed (P7 — `permission denied`, content intact) |
+| A bump (re-point to a new materialization) changes content; old pin untouched | trust | ✅ observed (P6) |
+| A re-pointed tag is caught by the SHA pin (not silently adopted) | trust | ✅ observed (P8 — `rev-parse` mismatch) |
+| The boot check **fires** when the tier is absent/partial/drifted | trust | ✅ observed (P9 — incl. tier removed) |
+| Real multi-skill pack packages cleanly at scale | mechanical | ✅ observed (P10 — all 22 skills, one symlink) |
+| Marketplace skips outside-symlinks | mechanical | ❌ doc-only (P11 — optional) |
+| Signature verification is enforceable | trust | ⏸ deferred (P12 — F4 chose no signing in the base) |
 
-**Net (corrected).** The **mechanical** conveniences are observation-backed; the **trust** properties — the
-ones that justify pinning to a tag at all — are **not**, and three of them were falsified when reviewers
-probed them by hand. The design in BRIEF v2 is written *against* those falsifications (immutable
-materialization + SHA pin + signed tag + tier-independent boot check); the observations below-the-line must
-be produced before slice 3.
+**Net (updated 2026-07-18).** The value-prop (P5, P10) and the trust mechanics (P6, P7, P8, P9) are now
+observation-backed at real scale — see [experiments/probe-run-2026-07-18.md](experiments/probe-run-2026-07-18.md).
+Round 1 falsified the *first draft's* tag pin (a writable working-tree target + a movable tag name); the
+decided F4 model (read-only `git archive` materialization + SHA pin, no signing) was then probed and holds.
+The design stands on evidence. Only P11 (doc-only) and P12 (deferred) remain un-run.
 
-## Probes still required (before slice 3 — do not claim the design done without them)
+## Probe backlog — status
 
-- **P5 — one-symlink-many-skills + add-mid-stream.** A plugin whose `skills/` holds ≥2 dirs, symlinked once;
-  verify all resolve; add a third dir; verify a fresh session finds it with **no** new symlink. *(Proves the
-  motivating under-install fix.)*
-- **P6 — real tag→tag bump.** Cut a second tag; bump tag-A → tag-B across fresh sessions; confirm pickup.
-- **P7 — out-of-band mutation / immutability.** On the chosen materialization (read-only export / read-only
-  worktree), attempt a stray `git checkout`/edit at the target; confirm the loader-visible content **cannot**
-  change without a reviewed bump, and that a boot-time `HEAD == pinned SHA` assertion catches drift.
-  *(Reviewers showed a writable working-tree target DOES silently change — this probe must show the fix
-  holds.)*
-- **P8 — re-pointed tag, fresh vs warm host, `--force`.** Re-point a tag upstream; confirm a warm host's
-  fetch is **rejected loudly** and a fresh host detects the SHA mismatch against the pin — not a silent
-  exit-0 adoption.
-- **P9 — boot check fires.** A tier-independent check detects an absent, partial (tier resolves but a skill
-  dir missing), and malformed-manifest tier, and emits a visible signal.
-- **P10 — real-pack packaging at scale.** Package the actual multi-skill tier; re-observe discovery,
-  namespacing, and hooks at real scale (not the toy).
-- **P11 — marketplace skip (optional).** Install a marketplace plugin, point a skill symlink outside the
-  marketplace, observe the skip — or keep the marketplace Non-goal as explicitly doc-only.
-- **P12 — signature verification.** Confirm a signed-tag signature check is enforceable on checkout/boot.
+Discharged 2026-07-18 (evidence: [experiments/probe-run-2026-07-18.md](experiments/probe-run-2026-07-18.md)):
+
+- **P5 — one-symlink-many-skills + add-mid-stream.** ✅ DONE — 2→3 skills via one symlink, no new link.
+- **P6 — tag→tag bump.** ✅ DONE — re-point to a new read-only materialization changes content; old pin
+  untouched. *(Two materializations of two tagged commits; not a live `git fetch` of a moved tag — that path
+  is P8.)*
+- **P7 — out-of-band mutation / immutability.** ✅ DONE — read-only `git archive` export has no `.git` and
+  blocks a stray edit (`permission denied`).
+- **P8 — re-pointed tag caught by the SHA pin.** ✅ DONE — `git rev-parse` of the moved tag ≠ the recorded
+  pin → fail loud. *(The `git fetch` warm/fresh-host `--force` exit-status behavior is not separately probed;
+  the SHA compare makes the fetch's exit code non-load-bearing — the pin, not the fetch, is the gate.)*
+- **P9 — boot check fires.** ✅ DONE — a standalone check flags absent, partial, and drifted tiers, and
+  still runs when the tier is removed (a bundled hook could not).
+- **P10 — real-pack packaging at scale.** ✅ DONE — all 22 real skills resolve through one symlink,
+  namespaced. *(Discovery + namespacing at scale; real hooks at scale were not exercised, no hooks ship yet.)*
+
+Still open:
+
+- **P11 — marketplace skip (optional).** Not run; the marketplace Non-goal stays explicitly **doc-only**.
+- **P12 — signature verification.** **Deferred** — F4 chose read-only + SHA pin with no signing in the base;
+  probe this only if signing is later adopted.
