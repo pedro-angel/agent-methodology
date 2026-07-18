@@ -1,0 +1,27 @@
+#!/bin/sh
+# AC-2 DENY path, mutation-verified (grounded-verifiable-gates r10): the
+# produce-time fidelity check catches an export that does not match the pinned
+# commit, AND is load-bearing (neutering it lets the corruption through).
+# shellcheck source=./_lib.sh disable=SC1091
+. "$(dirname "$0")/_lib.sh"
+
+mat="$TOOLS/materialize.sh"
+p=$(mk_pack alpha) || fail "mk_pack"
+sha=$(git -C "$p" rev-parse HEAD)
+
+# mutant-A: corrupt an extracted file AFTER extraction, BEFORE the fidelity check
+# (the guard is intact — it must catch this).
+awk '{print} /tar extract failed/{print "printf tampered > \"$tmp/skills/alpha/SKILL.md\""}' \
+  "$mat" >"$p/mutA.sh"
+# mutant-B: same corruption AND neuter the fidelity die (the guard is removed —
+# the corruption must slip through, proving the guard is what catches it).
+awk '/export fidelity failed/{sub(/die .*/, ": # NEUTERED")} {print} /tar extract failed/{print "printf tampered > \"$tmp/skills/alpha/SKILL.md\""}' \
+  "$mat" >"$p/mutB.sh"
+
+rcA=$(run_rc sh "$p/mutA.sh" "$p" "$sha" "$p/a")
+rcB=$(run_rc sh "$p/mutB.sh" "$p" "$sha" "$p/b")
+scrub "$p"
+
+[ "$rcA" -ne 0 ] || fail "fidelity guard did NOT catch a corrupt export (rcA=$rcA)"
+[ "$rcB" -eq 0 ] || fail "neutered guard still failed — the test is not exercising the guard (rcB=$rcB)"
+pass "t_export_fidelity_mismatch (catches: rcA=$rcA; load-bearing: rcB=$rcB)"

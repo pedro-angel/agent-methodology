@@ -1,0 +1,24 @@
+#!/bin/sh
+# AC-2: a materialization has no .git, denies writes, keeps content stable, and
+# carries a .skillset descriptor. (Property test — not a deny path.)
+# shellcheck source=./_lib.sh disable=SC1091
+. "$(dirname "$0")/_lib.sh"
+
+p=$(mk_pack alpha beta) || fail "mk_pack"
+sha=$(git -C "$p" rev-parse HEAD)
+out="$p/mat"
+
+if ! "$TOOLS/materialize.sh" "$p" "$sha" "$out" >/dev/null 2>&1; then
+  scrub "$p"; fail "materialize failed on a good sha"
+fi
+[ ! -e "$out/.git" ] || { scrub "$p"; fail "materialization contains .git"; }
+before=$(git -C "$p" hash-object "$out/skills/alpha/SKILL.md")
+if ( echo x >>"$out/skills/alpha/SKILL.md" ) 2>/dev/null; then
+  scrub "$p"; fail "a write to the read-only export succeeded"
+fi
+after=$(git -C "$p" hash-object "$out/skills/alpha/SKILL.md")
+[ "$before" = "$after" ] || { scrub "$p"; fail "content changed after a write attempt"; }
+[ -f "$out/.skillset" ] || { scrub "$p"; fail ".skillset missing"; }
+
+scrub "$p"
+pass "t_readonly_export"
