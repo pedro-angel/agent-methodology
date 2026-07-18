@@ -2,7 +2,7 @@
 
 *Consumes: [SPECS.md](SPECS.md) (v5). Feeds: [TASKS.md](TASKS.md). Date: 2026-07-18. v2 applies plan review
 round 1 ([reviews/plan-adversarial-round-1.md](reviews/plan-adversarial-round-1.md)): boot-check format
-fixed, all guard literals pinned, produce-time fidelity is a hash compare, `bump.sh` fetches, the empty agent
+fixed, all guard literals pinned, produce-time fidelity is exit-checked, `bump.sh` fetches, the empty agent
 tier's runtime consumption is deferred (scaffold only), and the mutation harness + negative scan are
 specified. The HOW; guarantees are SPECS's. Anonymized; consumer-specific cutover lives in the consumer repo.*
 
@@ -40,22 +40,29 @@ over the repo-root `skills/`. Agent `claude-tier/.claude-plugin/plugin.json`: `n
 **full-repo export root** (extra files beside `.claude-plugin/`+`skills/`) and confirms every skill still
 lists; if the mixed root is rejected, fall back to `git archive <sha> skills .claude-plugin`.
 
-## `materialize.sh <sha> <dest-root>` (REQ-3, REQ-4a; AC-2)
+## `materialize.sh <checkout> <sha> <out-dir>` (REQ-3, REQ-4a; AC-2) — the pure producer
 
-1. `tmp=$(mktemp -d "<dest-root>.tmp.XXXX")`.
-2. `git -C <checkout> archive <sha> | tar -x -C "$tmp"`, **both pipe exit codes checked**; non-zero →
-   `rm -rf "$tmp"`, fail loud.
-3. **Fidelity (AC-2, required — not the path-set floor):** compare a content hash of the export to the
-   commit's tree — `git -C <checkout> archive <sha> | git hash-object --stdin` vs a hash recomputed from
-   `$tmp` (or per-file `sha` of `git ls-tree -r <sha>` vs `$tmp`); mismatch → fail loud. Catches a truncated
-   file, not only a dropped one.
+*(Reconciled to the shipped implementation: it produces a verified read-only directory ONLY; the atomic
+symlink publish moved to the caller — see below.)*
+
+1. Verify `<sha>` is a commit (`git rev-parse --verify`); refuse if `<out-dir>` already exists.
+2. `git archive <sha> >"$tar"` then `tar -x -f "$tar" -C "$tmp"` as **two exit-checked steps** (POSIX sh has
+   no `pipefail`, so a piped `archive | tar` would hide a mid-stream failure).
+3. **Fidelity = those two exit codes + git's object integrity (AC-2).** `git archive` of a
+   rev-parse-verified, content-addressed commit is deterministic; a *complete* extraction IS the commit's
+   content, so a truncated / disk-full export fails loud on the `tar` exit. *(An earlier per-file
+   `ls-tree`/`hash-object` compare was dropped in implementation — it false-refused non-ASCII paths,
+   symlinks, and `export-ignore` entries, and added nothing over git's own integrity.)*
 4. Derive `"$tmp/.skillset"` = `basename` of each `"$tmp"/skills/*/` (sorted; never hand-authored — AC-4c).
-5. `chmod -R a-w "$tmp"`; the materialization dir is `<dest-root>.<sha>`.
-6. Publish atomically (AC-3d): `ln -s "$tmp" "<dest-root>.newlink" && mv -T "<dest-root>.newlink" "$symlink"`
-   — an atomic rename, no missing-target window. *(No `.pinned-sha` is written — it was unread, plan M-minor.)*
+5. `chmod -R a-w "$tmp"`; publish by `mv "$tmp" "<out-dir>"` (rename within one fs), then a **post-publish
+   check** that `<out-dir>/.skillset` exists (closes the `mv` TOCTOU). The signal trap `exit`s, not just
+   cleans. No `.pinned-sha` (unread).
 
-Interrupt safety: steps 1–5 are in `$tmp`; an interrupt leaves the prior symlink intact; a retry makes a new
-`$tmp` (idempotent); orphaned `.tmp.*` are reaped at the next bump.
+Interrupt-safe: everything is in `$tmp` until the final `mv`; an interrupt leaves prior state intact and
+reaps the temp. **The atomic symlink publish is the CALLER's job** (`bump.sh` / `install-consumer.sh`), via
+`ln -sfn "<out-dir>" "$symlink"` — portable across BSD+GNU (**`mv -T` is GNU-only; it errors on macOS**).
+Residual: BSD `ln -sf` is unlink-then-create, a sub-millisecond window; a session starting in it gets a loud
+`MISSING` (never silent) and the next session is fine — acceptable for the on-demand solo model.
 
 ## `bump.sh --ref <ref> --intended-sha <sha>` (REQ-4, REQ-4c; AC-3, AC-3b, AC-3c)
 
@@ -71,7 +78,7 @@ Interrupt safety: steps 1–5 are in `$tmp`; an interrupt leaves the prior symli
 4. Reap: keep `<dest-root>.<current>` and `<dest-root>.<previous>`; `rm -rf` only strictly-older
    `<dest-root>.*` and stale `.tmp.*` — **never the current or previous target** (AC-6b; guarded test M14).
 
-Rollback = `mv -T` the symlink to the retained previous dir.
+Rollback = `ln -sfn` the symlink to the retained previous dir (portable; `mv -T` is GNU-only).
 
 ## `bootcheck.sh <skills-root> <tier> <_>` (REQ-5; AC-4)
 
@@ -101,10 +108,13 @@ user-level `SessionStart` hook and writes the named log; if it does not, AC-4b i
 `t_export_fidelity_mismatch`, `t_reap_preserves_current_previous`, `t_wiring_absent_at_provision`. **Mutation
 harness (r10):** each test runs its guard **normal** (assert the deny signal) and against a **return-inverted
 copy** of the guard (assert the suite reddens) — both in one test.
-`scripts/checks/check-consume-deny-paths.sh` collects them against that exact set, **fails closed** if the
-set is empty or missing a member, and includes a meta-test that removing a member reddens the gate. It +
-a `shellcheck` hook go into `.pre-commit-config.yaml`, and **both the collector AND the modified
-`.pre-commit-config.yaml` are byte-mirrored into `templates/git-controls/`** (M11).
+`tools/consume/check-consume-deny-paths.sh` collects them against that exact set, **fails closed** if the
+set is empty or a member has no test file (fail-closed-on-missing IS the meta-property). It lives under
+`tools/consume/`, **not `scripts/checks/`** — that dir is byte-mirrored into the generic
+`templates/git-controls/` starter (the `check-templates-in-sync` validator enforces it), where a
+repo-specific consumption collector does not belong. Slice D wires it as a **local** `.pre-commit-config.yaml`
+hook (plus a `shellcheck` hook over `tools/consume/`); only the `.pre-commit-config.yaml` change is mirrored,
+not the collector. *(This corrects the earlier "scripts/checks/…" placement — surfaced in implementation.)*
 
 ## Doc changes (REQ-9; AC-8) + placement (REQ-7; AC-7)
 
