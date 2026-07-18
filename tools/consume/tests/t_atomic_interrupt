@@ -16,8 +16,14 @@ sh -n "$p/mut.sh" || { scrub "$p"; fail "mutant not valid shell"; }
 cp "$TOOLS/materialize.sh" "$p/materialize.sh"   # the mutant resolves materialize.sh beside itself
 rc=$(BUMP_ASSUME_YES=1 run_rc sh "$p/mut.sh" "$p" "$v2" "$v2" "$mat" "$sym")
 still=$(basename "$(readlink "$sym")")
+# retry with the REAL bump — idempotent: publishes v2, leaves no orphaned temp.
+BUMP_ASSUME_YES=1 sh "$B" "$p" "$v2" "$v2" "$mat" "$sym" >/dev/null 2>&1
+retried=$(basename "$(readlink "$sym")")
+temps=$(find "$mat" -maxdepth 1 -name '.mat.tmp.*' 2>/dev/null | wc -l | tr -d ' ')
 scrub "$p"
 
 [ "$rc" -ne 0 ]      || fail "interrupted bump did not fail (rc=$rc)"
 [ "$still" = "$v1" ] || fail "interrupted bump left the symlink at $still (want prior v1) — a MISSING window"
-pass "t_atomic_interrupt (interrupt before publish → prior pin $still intact)"
+[ "$retried" = "$v2" ] || fail "retry was not idempotent (now $retried, want v2)"
+[ "$temps" = 0 ]     || fail "retry left $temps orphaned temp export(s)"
+pass "t_atomic_interrupt (interrupt→prior $still intact; retry idempotent→$retried; temps=$temps)"

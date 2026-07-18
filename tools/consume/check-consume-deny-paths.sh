@@ -11,7 +11,7 @@ here=$(cd "$(dirname "$0")" && pwd)
 tests_dir="$here/tests"
 
 # The enumerated deny-path set (completes across the remaining slices):
-EXPECTED="t_export_fidelity_mismatch t_sha_mismatch t_force_refused t_first_resolution_wins t_reap_preserves_current_previous"
+EXPECTED="t_export_fidelity_mismatch t_sha_mismatch t_force_refused t_first_resolution_wins t_reap_preserves_current_previous t_review_fail_closed"
 # TODO(B-bootcheck): t_missing t_partial
 # TODO(C): t_wiring_absent_at_provision
 

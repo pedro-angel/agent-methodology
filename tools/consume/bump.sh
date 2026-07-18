@@ -4,7 +4,7 @@
 # Usage: bump.sh <checkout> <ref> <intended-sha> <mat-root> <symlink> [remote]
 #   Resolves <ref> ONCE, requires it to equal <intended-sha>, has the operator
 #   review any change to executable content (session hooks) before it lands,
-#   materializes the pin (via materialize.sh), atomically re-points <symlink> at
+#   materializes the pin (via materialize.sh), near-atomically re-points <symlink> at
 #   it, and reaps old materializations keeping the current AND the previous one
 #   (for rollback). Refuses --force. A `git fetch` (only if <remote> is given) is
 #   best-effort and its exit status is NOT trusted — the SHA compare is the gate.
@@ -22,14 +22,18 @@ for a in "$@"; do [ "$a" = "--force" ] && die "--force is forbidden"; done
 [ $# -ge 5 ] || die "usage: bump.sh <checkout> <ref> <intended-sha> <mat-root> <symlink> [remote]"
 checkout=$1; ref=$2; intended=$3; matroot=$4; symlink=$5; remote=${6:-}
 
-# Executable content that a bump could newly run in a consumer session:
-EXEC_PATHS="claude-tier/hooks claude-tier/scripts"
+# Executable content a bump could newly run in a consumer session — the whole
+# agent tier plus any top-level hooks/scripts (per DESIGN's pinned pathspec).
+EXEC_PATHS="scripts hooks claude-tier"
 
 [ -d "$checkout/.git" ] || die "not a git checkout: $checkout"
 [ -d "$matroot" ] || mkdir -p "$matroot" || die "cannot create mat-root: $matroot"
+mkdir -p "$(dirname "$symlink")" || die "cannot create symlink parent: $(dirname "$symlink")"
 
 # Best-effort, UNtrusted fetch — a clobbered/rejected tag can leave `git fetch`
 # exiting 0, so we never gate on it; the SHA compare below is the real gate.
+# A remote that looks like an option would be option-injected into git — refuse it.
+case "$remote" in -*) die "refusing a remote that looks like an option: $remote" ;; esac
 if [ -n "$remote" ]; then git -C "$checkout" fetch --tags "$remote" >/dev/null 2>&1 || true; fi
 
 # Resolve ONCE. The same $got is used for the diff, the materialize, and the pin
@@ -37,27 +41,43 @@ if [ -n "$remote" ]; then git -C "$checkout" fetch --tags "$remote" >/dev/null 2
 got=$(git -C "$checkout" rev-parse --verify --quiet "${ref}^{commit}") || die "cannot resolve ref: $ref"
 [ "$got" = "$intended" ] || die "resolved SHA $got != intended $intended (moved tag / lying fetch?)"
 
-# The previous pin: the SHA the symlink currently points at (dir basename).
+# The previous pin: the SHA the symlink currently points at (dir basename), used
+# both as the exec-review base and as the reap keep-guard.
 old_sha=""
 [ -L "$symlink" ] && old_sha=$(basename "$(readlink "$symlink")")
 empty_tree=$(git -C "$checkout" hash-object -t tree /dev/null)
-base=${old_sha:-$empty_tree}
 
-# Operator reviews any executable-content change before it lands.
+# The review base is the previous pin ONLY IF it still resolves to a commit here.
+# A dangling/foreign symlink or a GC'd/absent old commit (a fresh shallow clone —
+# the disposable-worker topology) falls back to the empty tree = a FULL review.
+# Never a silently-empty diff: the exec-content gate must fail CLOSED.
+base=$empty_tree
+if [ -n "$old_sha" ] && git -C "$checkout" rev-parse --verify --quiet "${old_sha}^{commit}" >/dev/null 2>&1; then
+  base=$old_sha
+fi
+
+# Operator reviews any executable-content change before it lands. Both $base and
+# $got are resolvable commits, so this diff does not fail; there is deliberately
+# NO error-swallowing (a diff failure exits via set -e — fail closed).
 # shellcheck disable=SC2086  # EXEC_PATHS is a deliberate multi-path list for git diff
-execdiff=$(git -C "$checkout" diff "$base" "$got" -- $EXEC_PATHS 2>/dev/null || true)
-if [ -n "$execdiff" ] && [ "${BUMP_ASSUME_YES:-}" != 1 ]; then
-  printf '%s\n' "$execdiff"
-  printf 'bump: the above executable-content change ships with %s. Apply? [y/N] ' "$got" >&2
-  read -r ans || ans=""
-  case "$ans" in y | Y | yes | YES) ;; *) die "operator declined the executable-content change" ;; esac
+execdiff=$(git -C "$checkout" diff "$base" "$got" -- $EXEC_PATHS)
+if [ -n "$execdiff" ]; then
+  if [ "${BUMP_ASSUME_YES:-}" = 1 ]; then
+    printf 'bump: NOTE — executable-content change auto-approved (BUMP_ASSUME_YES=1)\n' >&2
+  else
+    printf '%s\n' "$execdiff"
+    printf 'bump: the above executable-content change ships with %s. Apply? [y/N] ' "$got" >&2
+    read -r ans || ans=""
+    case "$ans" in y | Y | yes | YES) ;; *) die "operator declined the executable-content change" ;; esac
+  fi
 fi
 
 # Materialize the SAME resolved SHA (idempotent — reuse an existing one).
 target="$matroot/$got"
 [ -e "$target" ] || sh "$here/materialize.sh" "$checkout" "$got" "$target" >/dev/null || die "materialize failed"
 
-# Atomically (re-)point the consumer symlink (portable; `mv -T` is GNU-only).
+# Near-atomically (re-)point the consumer symlink: `ln -sfn` is unlink-then-create
+# (a sub-ms MISSING window → a loud MISSING, never silent). `mv -T` is GNU-only.
 ln -sfn "$target" "$symlink" || die "symlink publish failed"
 
 # Reap: keep current ($got) and previous ($old_sha); remove strictly-older
