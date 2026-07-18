@@ -97,6 +97,12 @@ back-fill process after the code. "Non-trivial" = anything beyond a one-file, fu
 - Never bend tests, fixtures, thresholds, or labels to manufacture a pass; never touch ground truth to win — if changing a fixture seems necessary, stop and get explicit agreement first.
 - Propagate every correction to every artifact it appeared in. Keep good and bad cases in the corpus so a detector that flags everything still fails. Defer honestly, naming the exact missing precondition.
 
+### currency-and-audit-before-trust
+
+- A fact you didn't just observe from the current primary source — memory, a doc, a prior note, another step's report — is a hypothesis: re-ground it against the live artifact at its real version, read the actual bytes, and cite `path:line@commit` before it drives an irreversible or security action.
+- Inherited code is untrusted until its behaviour is pinned by a characterization test — re-reading cannot establish trust (a compromised tool hides its trojan from its own source).
+- A dangerous construct (privilege-bypass flag, wildcard grant, `eval`, unbounded egress) is guilty until a machine-parseable check proves it inert; its presence is the finding. Disposition it with a recorded reason or remove it — never downgrade by eye ("probably a comment") or defer the check ("glance later").
+
 ### evidence-over-deference
 
 - When a request rests on a premise you can check in seconds, check it before executing. If the evidence contradicts the premise — or the request conflicts with a recorded principle — say so **once**, with the finding, its source, and a concrete alternative, before acting.
