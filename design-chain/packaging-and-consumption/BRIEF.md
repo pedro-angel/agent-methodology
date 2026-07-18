@@ -164,9 +164,9 @@ The check on a bump for executable content is a **pre-checkout diff review of an
 
 1. **This BRIEF + RESEARCH + review round 1** — frame + honest evidence, propose-only PR (← in flight).
 2. **Run the required probes (RESEARCH backlog) → SPECS + DESIGN + TASKS** — F1–F5 are decided (above); next:
-   the read-only-materialization method, the SHA-pin + boot-check mechanics, the bump's fail-loud-on-mismatch
-   + pre-checkout executable-content review, the per-worker self-materialization, and the placement rules,
-   each with acceptance criteria.
+   the read-only-materialization method, the SHA-pin and boot-check mechanics, the bump's
+   fail-loud-on-mismatch plus a pre-checkout executable-content review, the per-worker self-materialization,
+   and the placement rules, each with acceptance criteria.
 3. **Package the tiers** in this repo (add the `.claude-plugin/` manifest(s)) — additive, default-off for
    existing consumers until they switch; gated on the real-pack packaging probe (P10).
 4. **Consumer cutover — reversibly.**
