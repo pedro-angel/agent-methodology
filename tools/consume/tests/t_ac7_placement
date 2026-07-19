@@ -1,0 +1,42 @@
+#!/bin/sh
+# AC-7 (REQ-7): docs/placement.md has named criteria sections (portable / agent / project +
+# upward-promotion) and a frozen table of >=3 labeled example lessons; each table row's tier is in
+# {portable, agent, project} and its rationale text references that tier's stated criterion (a stability
+# check, not a functional classifier). POSIX sh, zero runtime deps.
+# shellcheck source=./_lib.sh disable=SC1091
+. "$(dirname "$0")/_lib.sh"
+repo=$(cd "$TOOLS/../.." && pwd)
+P="$repo/docs/placement.md"
+[ -f "$P" ] || fail "docs/placement.md missing"
+
+# named criteria sections
+for h in 'Portable tier' 'Agent tier' 'Project tier' 'Upward promotion'; do
+  grep -q "^## $h\$" "$P" || fail "placement.md missing criteria section: ## $h"
+done
+
+# Validate ONLY the rows of the '## Frozen examples' table (scoped via in_table, so an unrelated table
+# elsewhere in the doc can't false-red/false-green this). Done in awk so a `fail` isn't swallowed by a
+# pipe subshell. tier in {portable,agent,project}; rationale references the tier's criterion keyword,
+# matching the doc's stated criteria (agent accepts 'runtime' OR 'feature', per its wording).
+result=$(awk -F'|' '
+  /^## Frozen examples/ { in_table = 1; next }
+  /^## / { in_table = 0 }
+  in_table && /^\|/ {
+    t = $3; r = $4
+    gsub(/^[ \t]+|[ \t]+$/, "", t); gsub(/^[ \t]+|[ \t]+$/, "", r)
+    if (t == "Tier" || t ~ /^:?-+:?$/ || t == "") next          # header / alignment-separator / empty
+    rows++
+    if (t != "portable" && t != "agent" && t != "project") { print "FAIL: row tier not in {portable,agent,project}: " t; next }
+    rl = tolower(r); ok = 0
+    if (t == "portable" && index(rl, "agent-agnostic") > 0) ok = 1
+    if (t == "agent"    && (index(rl, "runtime") > 0 || index(rl, "feature") > 0)) ok = 1
+    if (t == "project"  && index(rl, "deployment") > 0) ok = 1
+    if (!ok) print "FAIL: " t " row rationale does not reference its criterion: " r
+  }
+  END { print "ROWS=" rows + 0 }
+' "$P")
+
+if echo "$result" | grep -q '^FAIL:'; then fail "$(echo "$result" | grep '^FAIL:' | head -1)"; fi
+rows=$(echo "$result" | sed -n 's/^ROWS=//p')
+[ "${rows:-0}" -ge 3 ] || fail "frozen-examples table has ${rows:-0} rows, need >=3"
+pass "t_ac7_placement (criteria sections present; $rows rows, each tier valid + rationale references its criterion)"
