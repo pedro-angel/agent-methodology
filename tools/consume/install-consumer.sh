@@ -104,12 +104,16 @@ trap - EXIT INT TERM HUP
 #    Fail loud, or the consumer is NOT provisioned.
 [ -x "$croot/bootcheck.sh" ] || die "wiring check: bootcheck.sh missing/not executable"
 [ -L "$cfg/skills/$tier" ]   || die "wiring check: tier symlink missing"
+# Don't suppress the tool's stderr or let a parse failure become a bare set -e exit —
+# a failed read here must die LOUD and diagnosable (not a silent non-zero).
 if command -v jq >/dev/null 2>&1; then
-  ss_ok=$(jq -r 'any(.hooks.SessionStart[]?.hooks[]?; (.command // "") | contains("bootcheck.sh"))' "$settings" 2>/dev/null)
+  ss_ok=$(jq -r 'any(.hooks.SessionStart[]?.hooks[]?; (.command // "") | contains("bootcheck.sh"))' "$settings") \
+    || die "wiring check: could not parse settings.json (jq)"
 else
   ss_ok=$(python3 -c 'import json,sys
 d=json.load(open(sys.argv[1]))
-print("true" if any("bootcheck.sh" in (hh.get("command","")) for e in d.get("hooks",{}).get("SessionStart",[]) for hh in (e.get("hooks") or [])) else "false")' "$settings" 2>/dev/null)
+print("true" if any("bootcheck.sh" in (hh.get("command","")) for e in d.get("hooks",{}).get("SessionStart",[]) for hh in (e.get("hooks") or [])) else "false")' "$settings") \
+    || die "wiring check: could not parse settings.json (python3)"
 fi
 [ "$ss_ok" = true ] || die "wiring check: SessionStart boot-check hook not registered"
 

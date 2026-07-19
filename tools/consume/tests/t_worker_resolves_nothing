@@ -11,8 +11,9 @@
 . "$(dirname "$0")/_lib.sh"
 IC="$TOOLS/install-consumer.sh"
 
-# static: no ref resolver of any common form appears in the worker entry point
-grep -Eq 'rev-parse|rev-list|show-ref|for-each-ref|fetch|ls-remote' "$IC" \
+# static: no ref resolver of any common form appears in the worker entry point's CODE
+# (strip comment-only lines so a future comment mentioning one can't false-fail this)
+grep -vE '^[[:space:]]*#' "$IC" | grep -Eq 'rev-parse|rev-list|show-ref|for-each-ref|fetch|ls-remote' \
   && fail "install-consumer.sh resolves refs itself — a worker must be GIVEN its SHA"
 
 p=$(mk_pack alpha) || fail "mk_pack"

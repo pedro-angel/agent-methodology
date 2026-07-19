@@ -107,7 +107,7 @@ apply DESIGN's `git archive <sha> skills .claude-plugin` fallback.
 - [ ] D2. Add the collector + a `shellcheck` hook to `.pre-commit-config.yaml`; **byte-mirror both the
       collector AND the modified `.pre-commit-config.yaml`** into `templates/git-controls/` (M11).
 - [ ] D3. Wire a **positive-test runner** so the non-deny suite (`t_provision_proxy`, `t_worker_resolves_nothing`,
-      `t_healthy`, `t_skillset_derived`, `t_review_fail_closed`) is gate-executed too — AC-5's proxy is a Slice C
+      `t_nonfile_target_refused`, `t_healthy`, `t_skillset_derived`, `t_review_fail_closed`) is gate-executed too — AC-5's proxy is a Slice C
       deliverable but the deny collector only runs deny tokens, so it is currently un-gated. *(Slice C
       spec-compliance review, finding #6.)*
 - [ ] D4. AC-9 negative scan (pinned globs, DESIGN): zero marketplace/signing artifacts. `pre-commit run
