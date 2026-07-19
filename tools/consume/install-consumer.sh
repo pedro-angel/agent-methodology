@@ -35,13 +35,16 @@ tier=agent-methodology
 case "$croot$cfg" in *"'"*) die "consumer-root and config-dir must not contain a single quote";; esac
 mkdir -p "$croot/mat" "$cfg/skills"
 
-# Refuse a pre-existing symlink at either install-owned write target: writing through
-# it (`cp`, `>`) could clobber an unrelated file, and neither path is ever a symlink
-# this provisioner creates (Copilot #25). Broader untrusted-environment tamper-resistance
-# is the consumer's structural boundary (separate UID / ro-mount) per SPECS, not this
-# layer — this is loud hygiene that also catches a non-malicious stale symlink.
+# Each install-owned write target must be absent or a plain regular file. Refuse a
+# pre-existing symlink (writing through it could clobber an unrelated file — Copilot #25)
+# OR any other non-regular type, notably a DIRECTORY: `cp` would copy INTO it and the
+# `[ -x ]` wiring assert would still pass (dirs are executable), reporting success with a
+# broken hook. Fail loud instead. (Broader untrusted-env tamper-resistance is the
+# consumer's structural boundary per SPECS; this is local write-target hygiene.)
 for f in "$croot/bootcheck.sh" "$cfg/settings.json"; do
-  if [ -L "$f" ]; then die "refusing to write through a pre-existing symlink at: $f"; fi
+  if [ -L "$f" ] || { [ -e "$f" ] && [ ! -f "$f" ]; }; then
+    die "refusing to write to a pre-existing non-regular-file (symlink/dir/...) at: $f"
+  fi
 done
 
 # 1. Install the pin: materialize + symlink (operator-approved -> auto-approve the
