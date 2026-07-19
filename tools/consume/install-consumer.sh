@@ -35,6 +35,15 @@ tier=agent-methodology
 case "$croot$cfg" in *"'"*) die "consumer-root and config-dir must not contain a single quote";; esac
 mkdir -p "$croot/mat" "$cfg/skills"
 
+# Refuse a pre-existing symlink at either install-owned write target: writing through
+# it (`cp`, `>`) could clobber an unrelated file, and neither path is ever a symlink
+# this provisioner creates (Copilot #25). Broader untrusted-environment tamper-resistance
+# is the consumer's structural boundary (separate UID / ro-mount) per SPECS, not this
+# layer — this is loud hygiene that also catches a non-malicious stale symlink.
+for f in "$croot/bootcheck.sh" "$cfg/settings.json"; do
+  if [ -L "$f" ]; then die "refusing to write through a pre-existing symlink at: $f"; fi
+done
+
 # 1. Install the pin: materialize + symlink (operator-approved -> auto-approve the
 #    exec review; a worker's sha is given, so bump resolves nothing new).
 BUMP_ASSUME_YES=1 sh "$here/bump.sh" "$checkout" "$sha" "$sha" "$croot/mat" "$cfg/skills/$tier" \
