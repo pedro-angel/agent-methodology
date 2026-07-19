@@ -13,7 +13,10 @@ runtime consumption is deferred until a Claude-only skill exists.
 
 ## Global constraints
 
-- POSIX sh, zero-dep for `tools/consume/*.sh` (shellcheck-clean). No consumer identifiers in this repo.
+- POSIX sh, shellcheck-clean, no consumer identifiers in this repo. The runtime hot path
+  (`materialize.sh`/`bump.sh`/`bootcheck.sh`) is zero-dep (SPECS REQ-11). `install-consumer.sh` is a one-shot
+  provisioner and may use `jq` **or** `python3` for the `settings.json` merge (a robust JSON merge needs a JSON
+  tool; hand-rolling one in sh is the fragile machinery to avoid) — it fails loud if neither is present.
 - Deny-test filenames **equal** their tokens (DESIGN); the collector fails closed on a missing member.
 - This repo's gate covers **AC-1..AC-4c, AC-5, AC-7, AC-8, AC-9**. AC-5h/AC-6/AC-6b are out-of-repo
   acceptance items (Slice F is a runbook here; the cutover PR lands in the consumer repo).
@@ -96,10 +99,18 @@ apply DESIGN's `git archive <sha> skills .claude-plugin` fallback.
 
 - [ ] D1. Finalize `check-consume-deny-paths.sh`: enumerated set `{t_missing, t_partial, t_sha_mismatch,
       t_force_refused, t_first_resolution_wins, t_export_fidelity_mismatch, t_reap_preserves_current_previous,
-      t_wiring_absent_at_provision}`; fail closed on empty/missing; meta-test that removing a member reddens.
+      t_review_fail_closed, t_wiring_absent_at_provision}`; fail closed on empty/missing; meta-test that
+      removing a member reddens. **Reconcile the enumeration** — SPECS AC-9 + DESIGN list 8 tokens but the
+      collector carries a 9th, `t_review_fail_closed` (the fail-closed exec-review guard added in Slice
+      B-bump); add it to the SPECS AC-9 + DESIGN pinned sets so all three agree at 9. *(Surfaced by Slice C
+      spec-compliance review, finding #5.)*
 - [ ] D2. Add the collector + a `shellcheck` hook to `.pre-commit-config.yaml`; **byte-mirror both the
       collector AND the modified `.pre-commit-config.yaml`** into `templates/git-controls/` (M11).
-- [ ] D3. AC-9 negative scan (pinned globs, DESIGN): zero marketplace/signing artifacts. `pre-commit run
+- [ ] D3. Wire a **positive-test runner** so the non-deny suite (`t_provision_proxy`, `t_worker_resolves_nothing`,
+      `t_nonfile_target_refused`, `t_healthy`, `t_skillset_derived`, `t_review_fail_closed`) is gate-executed too — AC-5's proxy is a Slice C
+      deliverable but the deny collector only runs deny tokens, so it is currently un-gated. *(Slice C
+      spec-compliance review, finding #6.)*
+- [ ] D4. AC-9 negative scan (pinned globs, DESIGN): zero marketplace/signing artifacts. `pre-commit run
       --all-files` green. PR.
 
 ### Slice E — Docs + placement (REQ-2b, REQ-7, REQ-9; AC-7, AC-8)
