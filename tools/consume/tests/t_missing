@@ -1,0 +1,21 @@
+#!/bin/sh
+# AC-4 DENY (mutation-verified): the boot check reports MISSING (token last, on
+# stderr, non-zero) for an absent/dangling tier; without the MISSING guard the
+# MISSING signal is not produced.
+# shellcheck source=./_lib.sh disable=SC1091
+. "$(dirname "$0")/_lib.sh"
+BC="$TOOLS/bootcheck.sh"
+root=$(mktemp -d)   # no <root>/agent-methodology at all
+
+out=$(sh "$BC" "$root" agent-methodology 2>&1) && true
+rc=$?
+mut="$root/bcmut.sh"
+awk '{ if ($0 ~ /does not resolve/) sub(/\|\| fail "[^"]*" MISSING/, "|| :"); print }' "$BC" >"$mut"
+sh -n "$mut" || { scrub "$root"; fail "mutant not valid shell"; }
+mout=$(sh "$mut" "$root" agent-methodology 2>&1) && true
+scrub "$root"
+
+[ "$rc" -ne 0 ] || fail "boot check did not fail on an absent tier (rc=$rc)"
+printf '%s\n' "$out"  | grep -qE '^METHODOLOGY .* MISSING$'  || fail "normal did not emit a MISSING line: $out"
+printf '%s\n' "$mout" | grep -qE '^METHODOLOGY .* MISSING$'  && fail "neutered MISSING guard still emitted MISSING — not exercising it"
+pass "t_missing (MISSING on absent tier; guard load-bearing)"

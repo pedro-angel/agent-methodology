@@ -88,11 +88,13 @@ Residual: BSD `ln -sf` is unlink-then-create, a sub-millisecond window; a sessio
 
 Rollback = `ln -sfn` the symlink to the retained previous dir (portable; `mv -T` is GNU-only).
 
-## `bootcheck.sh <skills-root> <tier> <_>` (REQ-5; AC-4)
+## `bootcheck.sh <skills-root> <tier>` (REQ-5; AC-4)
 
-Reads only the symlink target. `[ -e "$dir" ] || fail MISSING "…"`; then compare `sort "$dir/.skillset"`
-to `ls -1d "$dir"/skills/*/ | xargs -n1 basename | sort` → differ → `fail PARTIAL "…"`. `fail(){ printf
-'METHODOLOGY %s %s\n' "$2" "$1" >&2; exit 1; }` (token last). No external comparison; no `CORRUPTED` (R3).
+Reads only the symlink target `<skills-root>/<tier>`. `[ -e "$dir" ] || fail "…" MISSING`; missing/absent
+`.skillset` → `fail "…" PARTIAL`; then compare `sort "$dir/.skillset"` to the export's own `skills/*/`
+basenames sorted (`cmp -s`) → differ → `fail "…" PARTIAL`. `fail(){ printf 'METHODOLOGY %s %s\n' "$1" "$2"
+>&2; exit 1; }` called `fail <msg> <TOKEN>` (token LAST — matches AC-4). No external comparison; no
+`CORRUPTED` (R3).
 Supersedes the P9 prototype `scratchpad/probes/bootcheck.sh` (which used the token-first / `.pinned-sha` /
 `DRIFTED` shape — now retired).
 
