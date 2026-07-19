@@ -10,6 +10,7 @@
 # shellcheck source=./_lib.sh disable=SC1091
 . "$(dirname "$0")/_lib.sh"
 IC="$TOOLS/install-consumer.sh"
+[ -f "$IC" ] || fail "install-consumer.sh not found at $IC (a missing SUT must not pass vacuously)"
 
 # static: no ref resolver of any common form appears in the worker entry point's CODE
 # (strip comment-only lines so a future comment mentioning one can't false-fail this)

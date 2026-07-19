@@ -33,7 +33,7 @@ tier=agent-methodology
 # quote in either would break that quoting. Reject it fail-closed (config paths
 # never contain one) rather than shell-escaping for a case that shouldn't arise.
 case "$croot$cfg" in *"'"*) die "consumer-root and config-dir must not contain a single quote";; esac
-mkdir -p "$croot/mat" "$cfg/skills"
+mkdir -p "$croot/mat" "$cfg/skills" || die "could not create $croot/mat or $cfg/skills"
 
 # Each install-owned write target must be absent or a plain regular file. Refuse a
 # pre-existing symlink (writing through it could clobber an unrelated file — Copilot #25)
@@ -54,7 +54,7 @@ BUMP_ASSUME_YES=1 sh "$here/bump.sh" "$checkout" "$sha" "$sha" "$croot/mat" "$cf
 
 # 2. Install the boot check OUTSIDE any tier (a copy at the consumer root).
 cp "$here/bootcheck.sh" "$croot/bootcheck.sh" || die "could not install bootcheck.sh"
-chmod +x "$croot/bootcheck.sh"
+chmod +x "$croot/bootcheck.sh" || die "could not chmod +x $croot/bootcheck.sh"
 
 # 3. Register a SessionStart hook that runs it every session, appending to a named
 #    log. Dedupes any prior methodology boot-check hook (idempotent re-provision).
@@ -64,7 +64,7 @@ chmod +x "$croot/bootcheck.sh"
 log="$croot/.methodology-bootcheck.log"
 hookcmd="'$croot/bootcheck.sh' '$cfg/skills' $tier >> '$log' 2>&1 || true"
 settings="$cfg/settings.json"
-[ -f "$settings" ] || printf '{}\n' >"$settings"
+[ -f "$settings" ] || printf '{}\n' >"$settings" || die "could not initialize $settings"
 tmp=$(mktemp "$cfg/.settings.json.XXXXXX") || die "mktemp failed"
 trap 'rm -f "$tmp"' EXIT
 trap 'rm -f "$tmp"; exit 130' INT TERM HUP
@@ -95,7 +95,7 @@ json.dump(d, sys.stdout, indent=2)
 PY
 fi
 mode=$(stat -c '%a' "$settings" 2>/dev/null || stat -f '%Lp' "$settings" 2>/dev/null) || mode=
-if [ -n "$mode" ]; then chmod "$mode" "$tmp"; fi
+if [ -n "$mode" ]; then chmod "$mode" "$tmp" || die "could not set mode on the new settings.json"; fi
 mv "$tmp" "$settings" || die "publish settings.json failed (mv)"
 trap - EXIT INT TERM HUP
 

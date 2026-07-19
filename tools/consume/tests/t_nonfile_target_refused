@@ -9,6 +9,11 @@
 # shellcheck source=./_lib.sh disable=SC1091
 . "$(dirname "$0")/_lib.sh"
 IC="$TOOLS/install-consumer.sh"
+[ -f "$IC" ] || fail "install-consumer.sh not found at $IC (a missing SUT must not pass vacuously)"
+# Without a JSON tool, install-consumer refuses at the JSON-tool precondition BEFORE the
+# non-file target guard, so an rc!=0 here would not prove the guard fired — skip instead.
+{ command -v jq >/dev/null 2>&1 || command -v python3 >/dev/null 2>&1; } \
+  || { pass "t_nonfile_target_refused (SKIPPED: no JSON tool — guard is unreachable before the precondition)"; exit 0; }
 p=$(mk_pack alpha) || fail "mk_pack"
 sha=$(git -C "$p" rev-parse HEAD)
 
