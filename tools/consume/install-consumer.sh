@@ -62,31 +62,33 @@ chmod +x "$croot/bootcheck.sh" || die "could not chmod +x $croot/bootcheck.sh"
 #    Merge to a SAME-DIR temp and atomically rename (mirrors materialize.sh), so a
 #    concurrent session-start never reads a truncated file; the prior mode is kept.
 log="$croot/.methodology-bootcheck.log"
-hookcmd="'$croot/bootcheck.sh' '$cfg/skills' $tier >> '$log' 2>&1 || true"
+bootpath="$croot/bootcheck.sh"           # the SPECIFIC hook we install — match this, not a generic
+hookcmd="'$bootpath' '$cfg/skills' $tier >> '$log' 2>&1 || true"
 settings="$cfg/settings.json"
 [ -f "$settings" ] || printf '{}\n' >"$settings" || die "could not initialize $settings"
 tmp=$(mktemp "$cfg/.settings.json.XXXXXX") || die "mktemp failed"
 trap 'rm -f "$tmp"' EXIT
 trap 'rm -f "$tmp"; exit 130' INT TERM HUP
 if command -v jq >/dev/null 2>&1; then
-  jq --arg cmd "$hookcmd" '
+  jq --arg cmd "$hookcmd" --arg needle "$bootpath" '
     .hooks = (.hooks // {})
     | .hooks.SessionStart = (
         ((.hooks.SessionStart // [])
-         | map(.hooks = ((.hooks // []) | map(select((.command // "") | contains("bootcheck.sh") | not))))
+         | map(.hooks = ((.hooks // []) | map(select(((.command // "") | tostring) | contains($needle) | not))))
          | map(select((.hooks | length) > 0)))
         + [ { "hooks": [ { "type": "command", "command": $cmd } ] } ]
       )
   ' "$settings" >"$tmp" || die "settings.json merge failed (jq; is it a well-formed JSON object?)"
 else
-  HOOKCMD="$hookcmd" python3 - "$settings" >"$tmp" <<'PY' || die "settings.json merge failed (python3; is it a well-formed JSON object?)"
+  HOOKCMD="$hookcmd" NEEDLE="$bootpath" python3 - "$settings" >"$tmp" <<'PY' || die "settings.json merge failed (python3; is it a well-formed JSON object?)"
 import json, os, sys
+needle = os.environ["NEEDLE"]
 with open(sys.argv[1]) as f:
     d = json.load(f)
 h = d.setdefault("hooks", {})
 kept = []
 for e in h.get("SessionStart", []):
-    hooks = [hh for hh in (e.get("hooks") or []) if "bootcheck.sh" not in hh.get("command", "")]
+    hooks = [hh for hh in (e.get("hooks") or []) if needle not in str(hh.get("command", ""))]
     if hooks:
         e = dict(e); e["hooks"] = hooks; kept.append(e)
 kept.append({"hooks": [{"type": "command", "command": os.environ["HOOKCMD"]}]})
@@ -107,12 +109,13 @@ trap - EXIT INT TERM HUP
 # Don't suppress the tool's stderr or let a parse failure become a bare set -e exit —
 # a failed read here must die LOUD and diagnosable (not a silent non-zero).
 if command -v jq >/dev/null 2>&1; then
-  ss_ok=$(jq -r 'any(.hooks.SessionStart[]?.hooks[]?; (.command // "") | contains("bootcheck.sh"))' "$settings") \
+  ss_ok=$(jq -r --arg needle "$bootpath" 'any(.hooks.SessionStart[]?.hooks[]?; ((.command // "") | tostring) | contains($needle))' "$settings") \
     || die "wiring check: could not parse settings.json (jq)"
 else
-  ss_ok=$(python3 -c 'import json,sys
+  ss_ok=$(NEEDLE="$bootpath" python3 -c 'import json,os,sys
+needle=os.environ["NEEDLE"]
 d=json.load(open(sys.argv[1]))
-print("true" if any("bootcheck.sh" in (hh.get("command","")) for e in d.get("hooks",{}).get("SessionStart",[]) for hh in (e.get("hooks") or [])) else "false")' "$settings") \
+print("true" if any(needle in str(hh.get("command","")) for e in d.get("hooks",{}).get("SessionStart",[]) for hh in (e.get("hooks") or [])) else "false")' "$settings") \
     || die "wiring check: could not parse settings.json (python3)"
 fi
 [ "$ss_ok" = true ] || die "wiring check: SessionStart boot-check hook not registered"
