@@ -60,7 +60,9 @@ if command -v jq >/dev/null 2>&1; then
   jq --arg cmd "$hookcmd" '
     .hooks = (.hooks // {})
     | .hooks.SessionStart = (
-        ((.hooks.SessionStart // []) | map(select(((.hooks[0].command) // "") | contains("bootcheck.sh") | not)))
+        ((.hooks.SessionStart // [])
+         | map(.hooks = ((.hooks // []) | map(select((.command // "") | contains("bootcheck.sh") | not))))
+         | map(select((.hooks | length) > 0)))
         + [ { "hooks": [ { "type": "command", "command": $cmd } ] } ]
       )
   ' "$settings" >"$tmp" || die "settings.json merge failed (jq; is it a well-formed JSON object?)"
@@ -70,8 +72,11 @@ import json, os, sys
 with open(sys.argv[1]) as f:
     d = json.load(f)
 h = d.setdefault("hooks", {})
-kept = [e for e in h.get("SessionStart", [])
-        if "bootcheck.sh" not in ((e.get("hooks") or [{}])[0].get("command", ""))]
+kept = []
+for e in h.get("SessionStart", []):
+    hooks = [hh for hh in (e.get("hooks") or []) if "bootcheck.sh" not in hh.get("command", "")]
+    if hooks:
+        e = dict(e); e["hooks"] = hooks; kept.append(e)
 kept.append({"hooks": [{"type": "command", "command": os.environ["HOOKCMD"]}]})
 h["SessionStart"] = kept
 json.dump(d, sys.stdout, indent=2)

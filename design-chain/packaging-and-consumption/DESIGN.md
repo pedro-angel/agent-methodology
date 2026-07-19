@@ -104,7 +104,8 @@ Per consumer: materialize the operator-provided pin under `${CONSUMER_ROOT:?}` (
 create the **portable** tier symlink; install `bootcheck.sh` **outside any tier** and register a
 `SessionStart` hook (consumer `settings.json`) that runs it and appends the token to
 `${CONSUMER_ROOT}/.methodology-bootcheck.log` (AC-4b observation point). **Assert the wiring is present or
-fail the provisioning run** (base case) — a zero-dep `grep` for the boot-check command string. The
+fail the provisioning run** (base case) — a check scoped to `.hooks.SessionStart` via the same JSON tool the
+merge used (a JSON tool is already guaranteed), not a raw file grep a stray substring could satisfy. The
 **worker** variant takes the pin as an input and **must not** resolve a ref: it is fed the operator's SHA,
 and given a non-SHA ref it errors (AC-5 negative). Being a one-shot provisioner (not the runtime hot path),
 it merges the hook into an existing `settings.json` with `jq` **or** `python3` — a robust JSON merge needs a
