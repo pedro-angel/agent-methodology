@@ -48,6 +48,19 @@ repos:
         stages: [commit-msg]
         args: [feat, fix, docs, chore, refactor, test, build, ci, perf, style, revert]
 
+  # ---- shell lint over the consumption toolchain (repo-specific, scoped) ----
+  # shellcheck-py bundles the binary (no system or docker dependency). We match the consume
+  # shell files EXPLICITLY (scripts + the extensionless tests/t_* + _lib.sh) with types:[file],
+  # so lint coverage does NOT depend on the git executable bit — identify's shebang detection
+  # would otherwise skip a non-+x extensionless test. Scoped to tools/consume/, so the hook is
+  # skipped in any repo without those paths — dormant for adopters of the generic starter.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        files: ^tools/consume/(.+\.sh|tests/t_[A-Za-z0-9_]+)$
+        types: [file]
+
   # ---- PROJECT-INVARIANT VALIDATORS ----------------------------------------
   # POSIX sh, zero runtime deps. These encode THIS pack's contract — exactly what a
   # human reviewer used to check by hand, and what no off-the-shelf linter can verify.
@@ -104,6 +117,36 @@ repos:
         name: "no private identifier (hostname, internal name) enters the repo"
         language: script
         entry: scripts/checks/check-no-private-identifiers.sh
+        pass_filenames: false
+      # ---- CONSUMPTION-TOOLCHAIN GATE (repo-specific; scoped to tools/consume/) --------
+      # Enforce THIS pack's consumption tooling. Each hook fires only on a staged
+      # ^tools/consume/ path, so it is skipped in any repo without that directory — dormant
+      # for adopters of the generic templates/git-controls/ starter (whose consume scripts
+      # are NOT mirrored). An adopter that creates a tools/consume/ path would trip these
+      # against missing scripts; the byte-mirror keeps them here, so the assumption is
+      # documented rather than silently shipped.
+      - id: check-consume-deny-paths
+        name: "consumption deny-path gate: enumerated set complete + each passes (fail-closed)"
+        language: script
+        entry: tools/consume/check-consume-deny-paths.sh
+        files: ^tools/consume/
+        pass_filenames: false
+      - id: run-consume-tests
+        name: "consumption toolchain: positive test suite passes"
+        language: script
+        entry: tools/consume/run-consume-tests.sh
+        files: ^tools/consume/
+        pass_filenames: false
+      - id: check-no-marketplace-artifacts
+        name: "no marketplace/signing artifacts (REQ-10 non-goal)"
+        language: script
+        entry: tools/consume/check-no-marketplace-artifacts.sh
+        # The scan is repo-wide (git index) but triggered on ^tools/consume/, to stay dormant
+        # for adopters. Consequence: a LOCAL `git commit` adding a marketplace.json/*.sig
+        # elsewhere without touching tools/consume/ does NOT fire it locally. REQ-10 is
+        # enforced by CI's `pre-commit run --all-files` (tools/consume/ is always staged there)
+        # — the merge gate under propose-only — not the local pre-commit stage.
+        files: ^tools/consume/
         pass_filenames: false
       # OPT-IN: commits touching live-surface paths must carry an Evidence: trailer.
       # Configure EVIDENCE_PATH_REGEX in the script first (fail-closed if you don't).
