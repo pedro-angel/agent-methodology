@@ -96,7 +96,7 @@ PY
 fi
 mode=$(stat -c '%a' "$settings" 2>/dev/null || stat -f '%Lp' "$settings" 2>/dev/null) || mode=
 if [ -n "$mode" ]; then chmod "$mode" "$tmp"; fi
-mv "$tmp" "$settings"
+mv "$tmp" "$settings" || die "publish settings.json failed (mv)"
 trap - EXIT INT TERM HUP
 
 # 4. Assert the boot-check hook is registered — scoped to .hooks.SessionStart (a JSON
