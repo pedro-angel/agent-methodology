@@ -117,9 +117,10 @@ user-level `SessionStart` hook and writes the named log; if it does not, AC-4b i
 
 ## Deny-path tests + mutation harness + CI gate (REQ-11; AC-9)
 
-`tools/consume/tests/` — filenames **equal** the enumerated tokens so the collector maps them unambiguously:
-`t_missing`, `t_partial`, `t_sha_mismatch`, `t_force_refused`, `t_first_resolution_wins`,
-`t_export_fidelity_mismatch`, `t_reap_preserves_current_previous`, `t_wiring_absent_at_provision`. **Mutation
+`tools/consume/tests/` — filenames **equal** the enumerated tokens so the collector maps them unambiguously
+(the 9-member set, source-of-truth = the collector's `EXPECTED`): `t_missing`, `t_partial`, `t_sha_mismatch`,
+`t_force_refused`, `t_first_resolution_wins`, `t_export_fidelity_mismatch`, `t_reap_preserves_current_previous`,
+`t_review_fail_closed`, `t_wiring_absent_at_provision`. **Mutation
 harness (r10):** each test runs its guard **normal** (assert the deny signal) and against a **return-inverted
 copy** of the guard (assert the suite reddens) — both in one test.
 `tools/consume/check-consume-deny-paths.sh` collects them against that exact set, **fails closed** if the

@@ -97,21 +97,22 @@ apply DESIGN's `git archive <sha> skills .claude-plugin` fallback.
 
 ### Slice D — Complete the CI/DoD deny-path gate (REQ-11; AC-9)
 
-- [ ] D1. Finalize `check-consume-deny-paths.sh`: enumerated set `{t_missing, t_partial, t_sha_mismatch,
-      t_force_refused, t_first_resolution_wins, t_export_fidelity_mismatch, t_reap_preserves_current_previous,
-      t_review_fail_closed, t_wiring_absent_at_provision}`; fail closed on empty/missing; meta-test that
-      removing a member reddens. **Reconcile the enumeration** — SPECS AC-9 + DESIGN list 8 tokens but the
-      collector carries a 9th, `t_review_fail_closed` (the fail-closed exec-review guard added in Slice
-      B-bump); add it to the SPECS AC-9 + DESIGN pinned sets so all three agree at 9. *(Surfaced by Slice C
-      spec-compliance review, finding #5.)*
-- [ ] D2. Add the collector + a `shellcheck` hook to `.pre-commit-config.yaml`; **byte-mirror both the
-      collector AND the modified `.pre-commit-config.yaml`** into `templates/git-controls/` (M11).
-- [ ] D3. Wire a **positive-test runner** so the non-deny suite (`t_provision_proxy`, `t_worker_resolves_nothing`,
-      `t_nonfile_target_refused`, `t_healthy`, `t_skillset_derived`, `t_review_fail_closed`) is gate-executed too — AC-5's proxy is a Slice C
-      deliverable but the deny collector only runs deny tokens, so it is currently un-gated. *(Slice C
-      spec-compliance review, finding #6.)*
-- [ ] D4. AC-9 negative scan (pinned globs, DESIGN): zero marketplace/signing artifacts. `pre-commit run
-      --all-files` green. PR.
+- [x] D1. `check-consume-deny-paths.sh` enumerates the 9-member set (source of truth = its `EXPECTED`);
+      fail-closed on empty/missing; `t_collector_fails_closed` asserts removing a member reddens. SPECS AC-9 +
+      DESIGN reconciled to the same 9 filenames (added `t_review_fail_closed`, the fail-closed exec-review
+      guard from Slice B-bump). *(Surfaced by Slice C spec-compliance review, finding #5.)*
+- [x] D2. Added a scoped `shellcheck` (shellcheck-py, pinned) hook + the `check-consume-deny-paths` collector
+      hook to `.pre-commit-config.yaml`; **mirrored only the `.pre-commit-config.yaml` change** (byte-identical)
+      into `templates/git-controls/`. The collector/runner/scan scripts are NOT mirrored, and every consume hook
+      is scoped to `^tools/consume/` so it stays DORMANT for adopters (no `tools/consume/` there → never fires).
+      *(Corrects the earlier "byte-mirror both the collector AND the config" — mirroring the consumption
+      toolchain into the generic starter would be wrong; DESIGN already said "only the config change is mirrored.")*
+- [x] D3. `run-consume-tests.sh` runs the POSITIVE (non-deny) suite — every `t_*` except the collector's
+      `EXPECTED` members (which the collector runs) — wired as a scoped hook, so the AC-5 proxy, negatives,
+      hygiene, dedup, and collector/scan meta-tests are gate-executed. *(Slice C spec-compliance review, finding #6.)*
+- [x] D4. `check-no-marketplace-artifacts.sh` (AC-9 non-goal fence): zero `marketplace.json`/`*.sig`/`*.asc`
+      and no signing-manifest keys; wired as a scoped hook; `t_no_marketplace_scan` covers its deny path.
+      `pre-commit run --all-files` green (validated on aarch64 Linux). PR.
 
 ### Slice E — Docs + placement (REQ-2b, REQ-7, REQ-9; AC-7, AC-8)
 

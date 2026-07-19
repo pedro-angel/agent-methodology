@@ -179,8 +179,9 @@ expected set** and fails closed if the set is empty or missing a member.
   reference; exactly one maintainer-own-host mode-heading marker string is present; a pinned regex finds zero
   namespaced (`<pack>:<slug>`) invocation handles in prose. A non-Claude path-read of `skills/<slug>/SKILL.md`
   resolves (a labeled proxy for manifest-inertness).
-- **AC-9 (REQ-11, REQ-10)** — the enumerated deny-path set — `{PARTIAL, MISSING, sha-mismatch, --force,
-  fetch-exit0-diverges, first-resolution-wins, export-fidelity-mismatch, wiring-absent-at-provision}` — is all
+- **AC-9 (REQ-11, REQ-10)** — the enumerated deny-path set — `{t_missing, t_partial, t_sha_mismatch,
+  t_force_refused, t_first_resolution_wins, t_export_fidelity_mismatch, t_reap_preserves_current_previous,
+  t_review_fail_closed, t_wiring_absent_at_provision}` (9; = the collector's `EXPECTED`) — is all
   present in the collected tests; removing any member turns the gate red (a meta-test); each asserts its deny
   signal and goes red when its fail-closed return is flipped; a pinned scan finds zero marketplace/signing
   artifacts (`marketplace.json`, `*.sig`, `*.asc`, signing-manifest keys); shellcheck/POSIX, the anonymization

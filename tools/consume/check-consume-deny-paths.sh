@@ -1,11 +1,12 @@
 #!/bin/sh
-# check-deny-paths.sh — collect the enumerated deny-path tests, run them, and
+# check-consume-deny-paths.sh — collect the enumerated deny-path tests, run them, and
 # FAIL CLOSED if the set is empty or an enumerated member has no test file.
 #
-# Landed as a skeleton with Slice B-materialize (one member); Slices B-bump /
-# B-bootcheck / C add their members to EXPECTED, and Slice D wires this into the
-# pre-commit gate + the templates/git-controls mirror. Fail-closed-on-missing IS
-# the meta-property (removing a member's file reddens the gate).
+# The 9-member EXPECTED set below is the source of truth; SPECS AC-9 + DESIGN mirror it.
+# Slice D wires this into the pre-commit gate + CI, scoped to tools/consume/ changes; the
+# generic templates/git-controls mirror carries the hook dormant, not this script.
+# Fail-closed-on-missing IS the meta-property (removing a member's file reddens the gate;
+# t_collector_fails_closed asserts exactly that).
 set -u
 here=$(cd "$(dirname "$0")" && pwd)
 tests_dir="$here/tests"

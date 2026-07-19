@@ -19,7 +19,7 @@ printf '%s' '{"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"/o
 BUMP_ASSUME_YES=1 sh "$IC" "$p" "$sha" "$croot" "$cfg" >/dev/null 2>&1 || { scrub "$p"; fail "provision failed"; }
 BUMP_ASSUME_YES=1 sh "$IC" "$p" "$sha" "$croot" "$cfg" >/dev/null 2>&1 || { scrub "$p"; fail "re-provision failed"; }
 s="$cfg/settings.json"
-ours=$(grep -oF "$croot/bootcheck.sh" "$s" | wc -l | tr -d ' ')
+ours=$(grep -cF "$croot/bootcheck.sh" "$s")   # POSIX (no grep -o); settings.json is pretty-printed, 1 hook/line
 unrelated=no; grep -qF '/other/bootcheck.sh --user' "$s" && unrelated=yes
 scrub "$p"
 
