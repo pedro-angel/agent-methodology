@@ -64,19 +64,27 @@ reaps the temp. **The atomic symlink publish is the CALLER's job** (`bump.sh` / 
 Residual: BSD `ln -sf` is unlink-then-create, a sub-millisecond window; a session starting in it gets a loud
 `MISSING` (never silent) and the next session is fine — acceptable for the on-demand solo model.
 
-## `bump.sh --ref <ref> --intended-sha <sha>` (REQ-4, REQ-4c; AC-3, AC-3b, AC-3c)
+## `bump.sh <checkout> <ref> <intended-sha> <mat-root> <symlink> [remote]` (REQ-4, REQ-4c; AC-3, AC-3b, AC-3c)
 
-1. Reject `--force` in argv (AC-3c). `git -C <checkout> fetch --tags <remote>` **may exit 0 on a
-   clobbered/rejected tag** — its exit code is **not trusted**; resolve `got=$(git -C <checkout> rev-parse
-   "<ref>^{commit}")` and **fail loud if `got != <intended-sha>`** (AC-3c; this single SHA-vs-intent compare
-   covers both a moved tag and a lying fetch — plan M7).
-2. Exec-content review (AC-3b): `git -C <checkout> diff "<old-sha>" "$got" -- hooks scripts claude-tier`
-   (first bump: `old = $(git hash-object -t tree /dev/null)`, the empty tree). Present it; **block until the
-   operator confirms** before step 3. A doc-only diff is empty; the confirm is still required and recorded.
-   No machine token/record (lean; residual R4).
-3. `materialize.sh "$got" <dest-root>` — the SAME `$got`, no re-resolution (AC-3c TOCTOU).
-4. Reap: keep `<dest-root>.<current>` and `<dest-root>.<previous>`; `rm -rf` only strictly-older
-   `<dest-root>.*` and stale `.tmp.*` — **never the current or previous target** (AC-6b; guarded test M14).
+*(Reconciled to the shipped implementation: positional args; the atomic publish + reap live here since
+`materialize.sh` is the pure producer.)*
+
+1. Reject `--force` anywhere in argv, and refuse a `<remote>` that looks like an option (`-*` — option
+   injection) (AC-3c). `git -C <checkout> fetch --tags <remote>` (only if given) **may exit 0 on a
+   clobbered/rejected tag** — its exit code is **not trusted**; resolve `got=$(git rev-parse --verify
+   "<ref>^{commit}")` **once** and **fail loud if `got != <intended-sha>`** (AC-3c — one SHA-vs-intent
+   compare covers a moved tag and a lying fetch).
+2. Exec-content review (AC-3b): diff the previous pin → `$got` over `scripts hooks claude-tier`. The review
+   **base** is the previous pin ONLY IF it still resolves to a commit here; a dangling/foreign symlink or a
+   GC'd/shallow base falls back to the **empty tree = a full review**, never a silently-empty diff — the gate
+   **fails closed** (round-1 BLOCKER: a swallowed `git diff` error had skipped the review). A non-empty
+   exec-diff **blocks until the operator confirms**; a **doc-only (empty) diff proceeds without a prompt**
+   (AC-3b). `BUMP_ASSUME_YES=1` auto-approves (and says so on stderr) for automated setup / an
+   already-reviewed pin. No machine token/record (lean; residual R4).
+3. `materialize.sh <checkout> "$got" <mat-root>/<got>` — the SAME `$got`, no re-resolution (AC-3c TOCTOU);
+   then **near-atomically** re-point the symlink with `ln -sfn` (portable; `mv -T` is GNU-only).
+4. Reap: keep `<mat-root>/<current>` and `<mat-root>/<previous>`; `rm -rf` (after `chmod +w`) only
+   strictly-older materializations + stale `.mat.tmp.*` — **never the current or previous** (AC-6b).
 
 Rollback = `ln -sfn` the symlink to the retained previous dir (portable; `mv -T` is GNU-only).
 

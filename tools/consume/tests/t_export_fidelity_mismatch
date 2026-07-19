@@ -11,11 +11,13 @@ p=$(mk_pack alpha) || fail "mk_pack"
 sha=$(git -C "$p" rev-parse HEAD)
 
 # mutant-A: truncate the tar after archive (guard intact — tar -x must fail loud).
-awk '{print} /git archive/{print "head -c 40 \"$tar\" > \"$tar.t\" && mv \"$tar.t\" \"$tar\""}' \
+# Anchor on the real command (`--format=tar`), NOT the word "git archive" which
+# also appears in comments where $tar is undefined (that leaked a ".t" in cwd).
+awk '{print} /--format=tar/{print "head -c 40 \"$tar\" > \"$tar.t\" && mv \"$tar.t\" \"$tar\""}' \
   "$mat" >"$p/mutA.sh"
 # mutant-B: same truncation AND neuter the extract die (`|| die ...` -> `|| :`),
 # so the failed extraction is swallowed and a bad export is published.
-awk '{ if ($0 ~ /tar extract failed/) sub(/\|\| die "[^"]*"/, "|| :"); print; if (/git archive/) print "head -c 40 \"$tar\" > \"$tar.t\" && mv \"$tar.t\" \"$tar\"" }' \
+awk '{ if ($0 ~ /tar extract failed/) sub(/\|\| die "[^"]*"/, "|| :"); print; if (/--format=tar/) print "head -c 40 \"$tar\" > \"$tar.t\" && mv \"$tar.t\" \"$tar\"" }' \
   "$mat" >"$p/mutB.sh"
 
 sh -n "$p/mutA.sh" || { scrub "$p"; fail "mutant-A is not valid shell"; }
