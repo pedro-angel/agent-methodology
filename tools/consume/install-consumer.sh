@@ -60,7 +60,9 @@ chmod +x "$croot/bootcheck.sh" || die "could not chmod +x $croot/bootcheck.sh"
 #    log. Dedupes any prior methodology boot-check hook (idempotent re-provision).
 #    settings.json must be a single well-formed JSON object (a real Claude config is).
 #    Merge to a SAME-DIR temp and atomically rename (mirrors materialize.sh), so a
-#    concurrent session-start never reads a truncated file; the prior mode is kept.
+#    concurrent session-start never reads a truncated file. The prior file mode is
+#    preserved best-effort — if stat can't report it, the file keeps mktemp's 0600
+#    (a safe, more-restrictive fallback), never a widened mode.
 log="$croot/.methodology-bootcheck.log"
 bootpath="$croot/bootcheck.sh"           # the SPECIFIC hook we install — match this, not a generic
 hookcmd="'$bootpath' '$cfg/skills' $tier >> '$log' 2>&1 || true"
