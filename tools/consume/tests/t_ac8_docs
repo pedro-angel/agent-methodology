@@ -1,0 +1,34 @@
+#!/bin/sh
+# AC-8 (REQ-9, REQ-2b): over the ENUMERATED doc set (SPECS: INSTALL.md, adapters/claude/CLAUDE.md,
+# adapters/cursor/*, adapters/copilot/*, adapters/gemini/*, README.md) — (a) the retired per-slug install
+# loop is GONE (zero matches of the pinned reject-regex), (b) exactly ONE maintainer-own-host marker heading
+# (matched BYTE-EXACT to the DESIGN literal), (c) zero namespaced (<pack>:<slug>) invocation handles in prose,
+# (d) a skill's SKILL.md resolves by a plain path read (proxy for manifest-inertness). Reads the real repo
+# docs. POSIX sh, zero deps. NOTE: the pinned reject-regex is line-based (it catches the single-line retired
+# loop that existed); a hypothetical multi-line reformat would need the DESIGN pinned literal tightened.
+# shellcheck source=./_lib.sh disable=SC1091
+. "$(dirname "$0")/_lib.sh"
+repo=$(cd "$TOOLS/../.." && pwd)
+cd "$repo" || fail "cannot cd to repo root"
+DOCS="INSTALL.md adapters/claude/CLAUDE.md adapters/cursor/* adapters/copilot/* adapters/gemini/* README.md"
+
+markers=0
+for d in $DOCS; do
+  [ -f "$d" ] || fail "doc-set member missing (or a glob matched nothing): $d"
+  grep -nE '(ln -s.*~/\.claude/skills/[^ ]*/|for d in .*skills.*ln -sfn)' "$d" >/dev/null 2>&1 \
+    && fail "retired per-slug install loop still present in: $d"
+  grep -nE 'agent-methodology(-claude)?:[a-z-]+' "$d" >/dev/null 2>&1 \
+    && fail "namespaced (<pack>:<slug>) invocation handle present in prose: $d"
+  c=$(grep -Fxc "## Tag-pinned plugin (maintainer's own hosts)" "$d")
+  markers=$((markers + c))
+done
+
+# (b) exactly one maintainer-own-host marker heading across the enumerated set
+[ "$markers" -eq 1 ] || fail "expected exactly 1 own-host marker heading, found $markers"
+
+# (d) a skill's SKILL.md resolves by a plain path read (frontmatter opens with '---')
+set -- skills/*/SKILL.md
+one=$1
+{ [ -f "$one" ] && head -1 "$one" | grep -q '^---$'; } || fail "no skills/<slug>/SKILL.md resolves by a plain path read"
+
+pass "t_ac8_docs (enumerated set: no per-slug loop; exactly 1 byte-exact marker; no namespaced handles; SKILL.md path-read resolves)"
