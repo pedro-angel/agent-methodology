@@ -33,7 +33,7 @@ repos:
   # ---- generic markdown style ----------------------------------------------
   # Node hook, auto-provisioned and sandboxed by the manager (never committed).
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.22.1
+    rev: v0.23.1
     hooks:
       - id: markdownlint-cli2
         # Config: .markdownlint-cli2.yaml (MD013/MD033/MD041 relaxed for a prose pack).
