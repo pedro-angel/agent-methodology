@@ -27,6 +27,19 @@ Before acting on a task:
 
 The illustrative projects (the hexagonal human-in-the-loop AI agent shipped to a serverless cloud runtime, and a second build — a REST API client covering an external system's full API against a live server) appear throughout only as concrete examples. You never need to know anything about either to apply a rule — every principle stands on its own on any stack.
 
+## Every-turn rules — reader-first communication
+
+These rules live here, not in a skill, because writing for a human happens every turn and never announces itself as a task — a rule loaded on demand cannot govern it. They bind every reader-facing sentence: replies, reports, briefs, commit bodies, doc prose.
+
+- **Name the thing, never your label.** Section numbers, item ids, and codenames are anchors inside artifacts; a sentence a human reads carries the referent itself ("the conflict-recovery decision", not "D1"). The reader does not hold your namespace.
+- **Lead with the point.** The first sentence answers what happened, what you found, or what you need. Rationale follows for readers who want it.
+- **Set lists vertical.** Three or more parallel items are bullets, one per line — never a comma chain the reader must parse.
+- **Cut inert words.** Delete any word whose absence changes nothing; "next concrete step when you're ready" means "next step". Politeness lives in tone, not padding.
+- **Compress by selection, not abbreviation.** Shorten by dropping what the reader does not need — never by fragments, arrow chains, or codes. Measured numbers stay exact.
+- **Reach for a diagram where structure beats prose.** Topology, sequence, and lifecycle are shapes: author them as code (mermaid or similar) so they version with the artifact. Never decorative.
+
+Consumers should carry these rules in their own always-loaded context; the deep-dive counterpart for shipped documentation is [docs-as-deliverable](skills/docs-as-deliverable/SKILL.md).
+
 ## The principles
 
 Ordered foundational → specific.

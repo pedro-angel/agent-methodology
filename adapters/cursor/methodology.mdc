@@ -8,6 +8,17 @@ alwaysApply: true
 
 Applies to any non-trivial change — anything beyond a one-file, fully-understood edit. Priority when guidance conflicts: user's explicit instructions > this methodology > built-in defaults. For each matching rule below, read `skills/<slug>/SKILL.md` for the full rules, red-flags, and examples. For non-trivial work, follow the relevant process skill BEFORE writing implementation code — never back-fill the process.
 
+## Every-turn rules — reader-first communication
+
+Unlike the rules below, these are not matched to a task — they bind every reader-facing sentence you write: replies, reports, commit bodies, doc prose.
+
+- **Name the thing, never your label.** Section numbers, item ids, and codenames are anchors inside artifacts; a sentence a human reads carries the referent itself ("the conflict-recovery decision", not "D1").
+- **Lead with the point.** First sentence answers what happened, what you found, or what you need. Rationale follows.
+- **Set lists vertical.** Three or more parallel items are bullets, one per line — never a comma chain.
+- **Cut inert words.** Delete any word whose absence changes nothing. Politeness lives in tone, not padding.
+- **Compress by selection, not abbreviation.** Drop what the reader doesn't need; never fragments, arrow chains, or codes. Measured numbers stay exact.
+- **Reach for a diagram where structure beats prose.** Topology, sequence, and lifecycle are shapes — author them as code (mermaid or similar) so they version with the artifact. Never decorative.
+
 ## Rules — one line per skill
 
 - **spec-driven-development** — For a non-trivial feature, write the design chain first: BRIEF → RESEARCH → SPECS (the *what*) → DESIGN (the *how*) → TASKS, each phase consuming the last. Keep *what* and *how* in separate docs. Gate each phase behind a review recorded in the doc. When code diverges, reconcile the spec onto shipped reality and bump its version; strike through resolved items, don't delete them.

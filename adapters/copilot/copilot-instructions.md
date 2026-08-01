@@ -23,6 +23,18 @@ implementing — write the spec chain before the feature, set up ports and the b
 before touching an external system, define the gate before shipping an LLM decision. Never
 back-fill process after the code. "Non-trivial" = anything beyond a one-file, fully-understood change.
 
+## Every-turn rules — reader-first communication
+
+Unlike the rules below, these are not matched to a task. They bind every reader-facing
+sentence you write: replies, reports, commit bodies, doc prose.
+
+- **Name the thing, never your label.** Section numbers, item ids, and codenames are anchors inside artifacts; a sentence a human reads carries the referent itself ("the conflict-recovery decision", not "D1").
+- **Lead with the point.** First sentence answers what happened, what you found, or what you need. Rationale follows.
+- **Set lists vertical.** Three or more parallel items are bullets, one per line — never a comma chain.
+- **Cut inert words.** Delete any word whose absence changes nothing. Politeness lives in tone, not padding.
+- **Compress by selection, not abbreviation.** Drop what the reader doesn't need; never fragments, arrow chains, or codes. Measured numbers stay exact.
+- **Reach for a diagram where structure beats prose.** Topology, sequence, and lifecycle are shapes — author them as code (mermaid or similar) so they version with the artifact. Never decorative.
+
 ## The rules
 
 ### spec-driven-development
