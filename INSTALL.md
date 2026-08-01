@@ -131,7 +131,18 @@ Keep custom adapters thin — a pointer, not a copy of the rules. The bundled Cu
 
 ### Claude Code: one project, or every project
 
-This is the distinction that trips people. `CLAUDE.md` wires **one project**. To have the skills available in **every** project on a machine, install them at the user level:
+This is the distinction that trips people, so be precise about what it does and doesn't cover.
+
+**Only `skills/` can be machine-wide.** Claude Code auto-discovers skills placed under `~/.claude/skills/`, so one copy there serves every project. `AGENTS.md` and `CLAUDE.md` remain **per project** regardless — the adapter's first instruction is to read `AGENTS.md`, and it looks for it beside itself at the project root. Installing skills machine-wide does not give you a working project; it saves you one copy command per project.
+
+| Piece | Per machine | Per project |
+| --- | --- | --- |
+| `$PACK` (your clone) | yes, once | — |
+| `AGENTS.md` | no | **always** |
+| `CLAUDE.md` | no | **always** |
+| `skills/` | optional — `~/.claude/skills/` | otherwise yes |
+
+So a fresh laptop takes one clone, one machine-wide skills copy if you want it, and then two files per project:
 
 ```mermaid
 flowchart TD
@@ -153,14 +164,15 @@ flowchart TD
 ```
 
 ```bash
-# every project on this machine:
+# once per machine — skills for every project:
 mkdir -p ~/.claude/skills && cp -R "$PACK/skills/." ~/.claude/skills/
 
-# or this project only:
-mkdir -p "$PROJECT/.claude/skills" && cp -R "$PACK/skills/." "$PROJECT/.claude/skills/"
+# then, still once per project:
+cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
+cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"
 ```
 
-**Pick one, not both.** With skills installed at the user level, a second copy in `$PROJECT/.claude/skills/` gives the agent duplicates of every skill. If you already have both, delete the project-level copy — the repo's own `skills/` directory, which other agents and contributors read, is unaffected:
+**Never install skills in two places.** With skills at the user level, a second copy in `$PROJECT/.claude/skills/` gives the agent duplicates of every skill — so if you took the machine-wide route, skip the project-level `skills/` copy from Mode A. If you already have both, delete the project-level copy; the repo's own `skills/` directory, which other agents and contributors read, is unaffected:
 
 ```bash
 git rm -r "$PROJECT/.claude/skills"
@@ -171,12 +183,13 @@ git rm -r "$PROJECT/.claude/skills"
 First check the files are where the agent looks:
 
 ```bash
-ls -l "$PROJECT/AGENTS.md" "$PROJECT/skills" 2>&1
+ls -l "$PROJECT/AGENTS.md" 2>&1
 ls -l "$PROJECT/CLAUDE.md" 2>&1              # or the path for your agent
-ls ~/.claude/skills 2>/dev/null | head -3    # only if you installed machine-wide
+ls -d "$PROJECT/skills" 2>/dev/null || ls ~/.claude/skills >/dev/null 2>&1 \
+  && echo "skills reachable" || echo "skills MISSING in both locations"
 ```
 
-Then check the agent actually engages it. Open the project and ask:
+Then check the agent actually engages it. Start your agent in the project directory — for Claude Code that is `cd "$PROJECT" && claude` — and ask:
 
 > Which methodology skills apply here, and what does each require?
 
@@ -184,13 +197,29 @@ A correct install answers by citing `AGENTS.md` and reading the relevant `skills
 
 ## Keeping it up to date
 
-| Mode | To update | Effort |
+Every mode starts the same way — refresh your clone. `git clone` is a one-time act; from then on it is `git pull`:
+
+```bash
+git -C "$PACK" pull
+```
+
+| Mode | Then, to update | Effort |
 | --- | --- | --- |
-| Copy | re-run the Step 1 and Step 2 commands | manual, per project |
+| Copy | re-run the copy commands below, per project | manual, per project |
 | Sync bot | merge the PR it opens | review only |
-| Symlink | `git -C "$PACK" pull` | one command, all projects |
+| Symlink | nothing — the pull already did it | one command, all projects |
 | Submodule | `git submodule update --remote` and commit | one command, per repo |
 | Pinned plugin | approve and bump to a new SHA | deliberate, audited |
+
+In Copy mode, "re-run the copy commands" means, for each project you installed into:
+
+```bash
+git -C "$PACK" pull
+cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
+cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"
+cp -R "$PACK/skills/." "$PROJECT/skills/"        # skip if your skills are machine-wide
+cp -R "$PACK/skills/." ~/.claude/skills/         # instead of the line above, if they are
+```
 
 Because the rules live only in `AGENTS.md` and the `SKILL.md` files, an update never has to touch a per-agent adapter.
 

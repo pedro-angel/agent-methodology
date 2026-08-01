@@ -7,25 +7,34 @@ A set of engineering rules your AI coding agent reads before it works — so it 
 
 ## Install
 
-Get the pack, then wire it into one project:
+Clone the pack once per machine, then wire each project:
 
 ```bash
 git clone https://github.com/pedro-angel/agent-methodology ~/agent-methodology
 export PACK=~/agent-methodology
 export PROJECT=/path/to/your/project
 
-cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
-mkdir -p "$PROJECT/skills" && cp -R "$PACK/skills/." "$PROJECT/skills/"
-cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"   # or cursor / copilot / gemini
+cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"                                # the rules
+cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"                # or cursor / copilot / gemini
+mkdir -p "$PROJECT/skills" && cp -R "$PACK/skills/." "$PROJECT/skills/"  # the detail behind each rule
 ```
 
-That's the whole install for one project. **For every project on a machine** (Claude Code only), install the skills once at the user level instead:
+**Nothing here is global.** Each piece has exactly one home:
+
+| Piece | Where it goes |
+| --- | --- |
+| Your clone of this repo (`$PACK`) | once per machine |
+| `AGENTS.md` | **every project** |
+| Your agent's adapter (`CLAUDE.md`, `.mdc`, …) | **every project** |
+| `skills/` | every project — *or* once per machine, Claude Code only |
+
+Using Claude Code across many projects? Install the skills once at the user level and drop the third line from every project's install. `AGENTS.md` and `CLAUDE.md` are still required in each project — the adapter looks for `AGENTS.md` beside itself at the project root:
 
 ```bash
 mkdir -p ~/.claude/skills && cp -R "$PACK/skills/." ~/.claude/skills/
 ```
 
-Setting up a second computer means repeating the `git clone` there — the pack is just files in a git repo, and nothing is installed globally on your behalf. [INSTALL.md](INSTALL.md) covers every agent, keeping installs up to date, and the trade-offs between copying, symlinking, and pinning.
+A second computer means repeating the `git clone` there. [INSTALL.md](INSTALL.md) covers every agent, staying up to date, and the trade-offs between copying, symlinking, and pinning.
 
 ## How the pieces fit
 
