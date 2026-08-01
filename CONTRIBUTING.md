@@ -16,11 +16,22 @@ off your commits (`git commit -s`).
 - **`adapters/**`** are per-agent entry points. The Claude and Gemini adapters are
   thin pointers; the Cursor and Copilot adapters inline a *condensed index* because
   those tools don't reliably follow a pointer. **That inlined index is derived from
-  `AGENTS.md` — if you change the skill set, update every adapter to match** (CI
-  enforces that each adapter enumerates all skills).
+  `AGENTS.md` — if you change the skill set or the every-turn rules, update every
+  adapter to match.** Two CI checks enforce it: `check-adapters-complete` (every
+  adapter enumerates all skills) and `check-adapters-carry-every-turn` (every
+  enumerating adapter carries every every-turn rule).
 
 Edit `AGENTS.md` and the `SKILL.md` files; keep adapters in sync. Never copy the
 full rule text into an adapter.
+
+```mermaid
+flowchart LR
+  a["AGENTS.md<br/>edit here"] --> s["skills/&lt;slug&gt;/SKILL.md<br/>and here"]
+  a --> ci{"CI checks"}
+  s --> ci
+  ci --> ad["adapters/*<br/>update to match"]
+  ci --> rd["README skill index<br/>update to match"]
+```
 
 ## Local setup
 

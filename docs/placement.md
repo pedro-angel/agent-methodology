@@ -6,6 +6,21 @@ where it started. The rule of thumb: write a lesson at the **most general tier i
 supports** — no lower (it would be re-learned elsewhere), no higher (it would mislead agents it does
 not apply to).
 
+```mermaid
+flowchart BT
+  project["Project tier<br/>specific to one repo's structure or deployment<br/>lives as an ADR or doc in that repo"]
+  agent["Agent tier<br/>depends on one agent's runtime or features<br/>lives in claude-tier/"]
+  portable["Portable tier<br/>agent-agnostic engineering discipline<br/>lives in skills/ + AGENTS.md"]
+
+  project -->|"generalizes: strip repo specifics"| agent
+  agent -->|"generalizes: strip agent mechanics"| portable
+
+  portable -.->|"never flows back down"| agent
+```
+
+Promotion is one-directional. A lesson moves up as it proves general, and is **rewritten** at the
+higher tier's altitude rather than copied.
+
 ## Portable tier
 
 **Criterion: the lesson is agent-agnostic** — general engineering discipline that holds for *any* AI

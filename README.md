@@ -3,80 +3,177 @@
 [![checks](https://github.com/pedro-angel/agent-methodology/actions/workflows/checks.yml/badge.svg)](https://github.com/pedro-angel/agent-methodology/actions/workflows/checks.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A portable engineering methodology for AI coding agents, distilled from real builds: primarily a shipped, hexagonal, human-in-the-loop AI agent deployed to a serverless cloud runtime, behind a framework-free domain, with a CI-able eval harness gating its LLM decisions — and, for the fan-out and large-surface live-testing rules, a second build: a REST API client covering an external system's full API against a containerized live server. Every rule here earned its place by surviving a real build — docs that drifted from code, integrations that passed mocks and failed live, models that over-flagged, parallel agents that collided on shared state, secrets, and teardown. The result is provenance you can trust without lore you have to learn: nothing below assumes a particular language, framework, or agent runtime, and you never need to know either source project to apply a single rule.
+A set of engineering rules your AI coding agent reads before it works — so it writes the spec first, proves integrations against real infrastructure, and pauses before anything irreversible. Plain Markdown, no runtime, no dependencies. Works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex, or anything that reads a file.
 
-## Philosophy
+## Install
 
-- **Process before code.** For anything non-trivial, run the relevant process skill *before* implementing — don't back-fill the design after the fact.
-- **Machines enforce, not memory.** A linter, a gate, an eval harness — encode the discipline so it survives the next contributor who didn't read this.
-- **Reality is the only proof.** Mocks prove wiring; only a live run against real infrastructure proves the guarantee. An unverified claim is a hope.
-- **Reversible by default, a human on the irreversible 1%.** The cheap, undoable work flows freely; consequential acts pause for explicit approval.
-
-## Skill index
-
-Match your task to the skills below — most non-trivial work touches two or three — then read the full `SKILL.md` for each match before acting.
-
-| Skill | When to use |
-| --- | --- |
-| [spec-driven-development](skills/spec-driven-development/SKILL.md) | Starting any non-trivial feature, or when docs and code have drifted — write the BRIEF → RESEARCH → SPECS → DESIGN → TASKS chain before or alongside the code, and reconcile specs onto what actually shipped. |
-| [environment-research](skills/environment-research/SKILL.md) | About to spec or plan on top of a dependency, library, API, CLI, or platform whose real behavior you haven't observed — run a small real experiment and let the observation outrank the documentation when they disagree. |
-| [adversarial-lens-review](skills/adversarial-lens-review/SKILL.md) | A spec, plan, or implementation must be trusted before it advances — dispatch a fresh reviewer per binding named lens to enumerate flaws, not confirm intent, and loop until BLOCKER/MAJOR findings clear. |
-| [hexagonal-with-enforced-contracts](skills/hexagonal-with-enforced-contracts/SKILL.md) | Building anything that touches external systems (LLMs, databases, cloud SDKs, HTTP APIs) — isolate a framework-free core behind ports, and let an import-linter, not reviewer discipline, fail the build on a boundary violation. |
-| [configuration-single-source-of-truth](skills/configuration-single-source-of-truth/SKILL.md) | A value (project id, model name, threshold, rubric) would otherwise be duplicated across build scripts, code, docs, and CI — collapse it to one authoritative source everything else derives from. |
-| [dev-environment-facade](skills/dev-environment-facade/SKILL.md) | Wiring a project's dev workflow (local stack, test tiers, gates) — thin self-documenting Makefile over real scripts, gate commands mirrored character-identically, and env files split by owner so targets consume but never write them. |
-| [surgical-changes-with-checkpoints](skills/surgical-changes-with-checkpoints/SKILL.md) | Every edit — make the smallest correct diff, save a known-good checkpoint before risky work, and write each commit so a stranger can see what changed, why, and what proved it correct. |
-| [additive-default-off-feature-flags](skills/additive-default-off-feature-flags/SKILL.md) | Adding a capability to a system that already works — ship it behind a default-off switch or optional collaborator so the proven path stays untouched and the blast radius starts at zero. |
-| [battle-testing-on-real-infra](skills/battle-testing-on-real-infra/SKILL.md) | About to call an integration, deployment, or durability guarantee "done" — prove it live, end-to-end, against the real systems and capture the run as an evidence artifact someone else can open. |
-| [acceptance-tests-observable-outcomes](skills/acceptance-tests-observable-outcomes/SKILL.md) | Proving a feature delivers its intended outcome, not just that its code paths run — write executable acceptance tests against real, user-observable outcomes, derived from the spec before or independent of the implementation. |
-| [grounded-verifiable-gates](skills/grounded-verifiable-gates/SKILL.md) | An LLM or agent emits a decision or claim that drives what happens next — force every claim to cite real source text, gate it with a deterministic function, and guard that function with a CI eval harness. |
-| [definition-of-done-tooling](skills/definition-of-done-tooling/SKILL.md) | About to claim work is complete or shippable — run a script that reads declared required/n-a criteria and emits GO/NO-GO; the author never self-certifies. |
-| [honest-reframing-over-overclaiming](skills/honest-reframing-over-overclaiming/SKILL.md) | A live result contradicts the hoped-for story, or a metric is one tweak from green — rewrite the claim to the measured number; never bend tests, fixtures, thresholds, or ground truth to manufacture a pass. |
-| [currency-and-audit-before-trust](skills/currency-and-audit-before-trust/SKILL.md) | Making a load-bearing or security-relevant claim, or reusing inherited/unfamiliar code — re-ground recalled facts against the live source (cite `path:line@commit`), pin inherited behaviour in a characterization test before trusting it, and disposition every dangerous surface (a bypass flag, a wildcard grant, an `eval`) rather than eyeballing it. |
-| [evidence-over-deference](skills/evidence-over-deference/SKILL.md) | The human's request rests on a premise you can check, contradicts evidence or a recorded principle, or proposes a direction you haven't weighed — verify the premise or weigh the strongest alternative first, challenge once with the evidence and an alternative, then execute their decision fully once heard. |
-| [reversible-by-default-confirm-consequential](skills/reversible-by-default-confirm-consequential/SKILL.md) | An agent or automation can touch systems you don't own (ticketing, repos, email, payments, prod data) — stay read-only/reversible by default and gate consequential acts behind a durable human approval. |
-| [structural-security-boundary](skills/structural-security-boundary/SKILL.md) | Containing untrusted or agent-generated execution — put the real boundary in a layer the actor can't reach (separate UID, read-only mount, namespace), keep string guards as fail-toward-ask defense-in-depth, and pin what you can't yet enforce. |
-| [secrets-and-teardown-discipline](skills/secrets-and-teardown-discipline/SKILL.md) | Handling credentials, infrastructure-as-code, or ephemeral cloud — make secrets structurally un-committable, grant least privilege, tear down what you stood up and verify it reached zero, and own only your scope. |
-| [docs-as-deliverable](skills/docs-as-deliverable/SKILL.md) | Shipping or handing off code — treat docs as first-class: present-tense prose, diagrams authored as code, every claim verified against the running reality, comprehension proven by an actual reader. |
-| [decision-memory](skills/decision-memory/SKILL.md) | A decision, gotcha, or preference would otherwise be re-derived next session — capture it as a small, dated, indexed note at the moment of discovery, and verify a note still holds before trusting it. |
-| [autonomous-self-improvement-loop-safety](skills/autonomous-self-improvement-loop-safety/SKILL.md) | Building automation that edits, tests, or deploys itself — disposable fresh-clone per cycle, decide success by a mechanical check not the worker's word, bind tested==shipped, and keep an adversarial pass plus a human on the merge. |
-| [parallel-agent-fan-out](skills/parallel-agent-fan-out/SKILL.md) | Fanning out many write-capable sub-agents across one build — pre-wire the shared seams, hand each a disjoint file-ownership manifest, namespace every resource on shared live substrate, and re-run every agent's own gate yourself instead of trusting its report. |
-
-## Repo layout
-
-```text
-AGENTS.md     Canonical methodology — the single source of truth. Read this first.
-skills/       One directory per skill; each holds a SKILL.md with rules, red-flags, and worked examples.
-adapters/     Per-agent entry points (claude/, cursor/, copilot/, gemini/, …) that point back to AGENTS.md.
-INSTALL.md    How to wire this pack into your agent.
-README.md     This file.
-```
-
-`AGENTS.md` is canonical: the skills are its detail, and the adapters are per-agent entry points. The Claude and Gemini adapters are thin pointers back to `AGENTS.md`; the Cursor and Copilot adapters inline a *condensed index* (those tools don't reliably follow a bare pointer) that is kept in sync with this file and still directs the reader to the full `SKILL.md` for detail. The methodology speaks in **actions** — "run the test suite against real infrastructure," "create a checkpoint commit," "pause for human approval" — so it applies whether your tool is Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex, or anything else. Where a capability is agent-specific, the skills name two or three equivalents rather than assuming one runtime.
-
-## Quickstart
-
-Drop the source of truth and the skills into your project, then add your agent's adapter:
+Get the pack, then wire it into one project:
 
 ```bash
-PACK=/path/to/agent-methodology   # this repo
-PROJECT=/path/to/your/project     # where you're installing it
+git clone https://github.com/pedro-angel/agent-methodology ~/agent-methodology
+export PACK=~/agent-methodology
+export PROJECT=/path/to/your/project
+
 cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
-cp -R "$PACK/skills"  "$PROJECT/skills"
+mkdir -p "$PROJECT/skills" && cp -R "$PACK/skills/." "$PROJECT/skills/"
 cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"   # or cursor / copilot / gemini
 ```
 
-That is the whole install for most agents. See [INSTALL.md](INSTALL.md) for every agent, the symlink/submodule options, and how to keep it updated.
+That's the whole install for one project. **For every project on a machine** (Claude Code only), install the skills once at the user level instead:
+
+```bash
+mkdir -p ~/.claude/skills && cp -R "$PACK/skills/." ~/.claude/skills/
+```
+
+Setting up a second computer means repeating the `git clone` there — the pack is just files in a git repo, and nothing is installed globally on your behalf. [INSTALL.md](INSTALL.md) covers every agent, keeping installs up to date, and the trade-offs between copying, symlinking, and pinning.
+
+## How the pieces fit
+
+`AGENTS.md` holds the rules. Each rule has a full `SKILL.md` behind it. Every agent reaches the same two things through whatever file that agent happens to read:
+
+```mermaid
+flowchart LR
+  claude["Claude Code"] --> cmd["CLAUDE.md"]
+  cursor["Cursor"] --> mdc[".cursor/rules/methodology.mdc"]
+  copilot["GitHub Copilot"] --> cpi[".github/copilot-instructions.md"]
+  gemini["Gemini CLI"] --> gem["GEMINI.md"]
+  codex["Codex / any AGENTS.md-native tool"] --> agents
+
+  cmd --> agents["AGENTS.md<br/>the rules + the index"]
+  mdc --> agents
+  cpi --> agents
+  gem --> agents
+
+  agents --> skills["skills/&lt;slug&gt;/SKILL.md<br/>rules, red flags, worked examples"]
+```
+
+You edit `AGENTS.md` and the skill files. You almost never touch an adapter — that is what keeps one pack working across every agent.
+
+Two adapters are a deliberate exception. Cursor and Copilot don't reliably follow a bare pointer to another file, so their adapters inline a condensed index of every rule. A CI check fails the build if that index drifts from the source.
+
+## Which install mode do you want?
+
+The files can live in your project four different ways. They differ only in **how an update reaches you**:
+
+| Mode | Files in your repo are… | An update arrives when… | Use it when |
+| --- | --- | --- | --- |
+| **Copy** | real, committed files | you re-run the copy commands | trying it out; a repo others clone |
+| **Sync bot** | real, committed files | a weekly workflow opens a PR | a shared repo that must vendor real files |
+| **Symlink** | links to your local clone | you `git pull` the clone | solo machine, many projects, one checkout |
+| **Pinned plugin** | a link to a frozen export | you review and approve a new commit | you want to audit exactly what runs |
+
+```mermaid
+flowchart TD
+  start["How should updates reach you?"]
+  start --> q1{"Do other people<br/>clone this repo?"}
+
+  q1 -- "yes" --> q2{"Want updates<br/>reviewed as a PR?"}
+  q2 -- "yes" --> sync["Sync bot<br/>copy + weekly PR"]
+  q2 -- "no" --> copy["Copy<br/>re-run cp when you want it"]
+
+  q1 -- "no" --> q3{"Must you audit<br/>exactly what runs?"}
+  q3 -- "yes" --> pin["Pinned plugin<br/>frozen, SHA-pinned export"]
+  q3 -- "no" --> link["Symlink<br/>one clone, every project"]
+```
+
+Full commands for each are in [INSTALL.md](INSTALL.md).
+
+## The rules
+
+Twenty-two skills. Match your task to one or more — most non-trivial work touches two or three — then read that `SKILL.md` in full before acting.
+
+### Designing before building
+
+| Skill | Use it when |
+| --- | --- |
+| [spec-driven-development](skills/spec-driven-development/SKILL.md) | Starting a non-trivial feature, or docs and code have drifted apart |
+| [environment-research](skills/environment-research/SKILL.md) | About to design on top of a dependency whose real behavior you haven't watched |
+| [adversarial-lens-review](skills/adversarial-lens-review/SKILL.md) | A spec, plan, or diff must be trusted before it advances |
+| [decision-memory](skills/decision-memory/SKILL.md) | A decision would otherwise be re-derived from scratch next session |
+
+### Structuring the system
+
+| Skill | Use it when |
+| --- | --- |
+| [hexagonal-with-enforced-contracts](skills/hexagonal-with-enforced-contracts/SKILL.md) | The app touches external systems — databases, LLMs, cloud SDKs, HTTP APIs |
+| [configuration-single-source-of-truth](skills/configuration-single-source-of-truth/SKILL.md) | A value is about to be duplicated across scripts, code, docs, and CI |
+| [dev-environment-facade](skills/dev-environment-facade/SKILL.md) | Wiring the dev workflow — local stack, test tiers, gate commands |
+
+### Changing code without breaking it
+
+| Skill | Use it when |
+| --- | --- |
+| [surgical-changes-with-checkpoints](skills/surgical-changes-with-checkpoints/SKILL.md) | Every edit — smallest correct diff, checkpoint before risky work |
+| [additive-default-off-feature-flags](skills/additive-default-off-feature-flags/SKILL.md) | Adding a capability to something that already works |
+| [currency-and-audit-before-trust](skills/currency-and-audit-before-trust/SKILL.md) | Reusing inherited code, or making a security-relevant claim |
+
+### Proving it actually works
+
+| Skill | Use it when |
+| --- | --- |
+| [battle-testing-on-real-infra](skills/battle-testing-on-real-infra/SKILL.md) | About to call an integration or deployment "done" |
+| [acceptance-tests-observable-outcomes](skills/acceptance-tests-observable-outcomes/SKILL.md) | Proving a feature delivers its outcome, not just that its code runs |
+| [grounded-verifiable-gates](skills/grounded-verifiable-gates/SKILL.md) | An LLM's output decides what happens next |
+| [definition-of-done-tooling](skills/definition-of-done-tooling/SKILL.md) | About to claim work is complete or shippable |
+| [honest-reframing-over-overclaiming](skills/honest-reframing-over-overclaiming/SKILL.md) | A live result contradicts the story you hoped to tell |
+
+### Working with humans and other agents
+
+| Skill | Use it when |
+| --- | --- |
+| [evidence-over-deference](skills/evidence-over-deference/SKILL.md) | A request rests on a premise you can check, or a direction you haven't weighed |
+| [reversible-by-default-confirm-consequential](skills/reversible-by-default-confirm-consequential/SKILL.md) | An agent can touch systems you don't own |
+| [parallel-agent-fan-out](skills/parallel-agent-fan-out/SKILL.md) | Fanning out many write-capable sub-agents across one build |
+| [autonomous-self-improvement-loop-safety](skills/autonomous-self-improvement-loop-safety/SKILL.md) | Building automation that edits, tests, or deploys itself |
+
+### Security, secrets, and handoff
+
+| Skill | Use it when |
+| --- | --- |
+| [structural-security-boundary](skills/structural-security-boundary/SKILL.md) | Containing untrusted or agent-generated execution |
+| [secrets-and-teardown-discipline](skills/secrets-and-teardown-discipline/SKILL.md) | Handling credentials, infrastructure-as-code, or ephemeral cloud |
+| [docs-as-deliverable](skills/docs-as-deliverable/SKILL.md) | Shipping or handing off code |
+
+Beyond the skills, `AGENTS.md` carries a short set of **every-turn rules** — how an agent writes to you, on every reply. They live in always-loaded text rather than a skill because writing to a human never announces itself as a task, so nothing would ever trigger a skill to load.
+
+## What's in this repo
+
+```text
+AGENTS.md        The methodology itself. Canonical — everything else points here.
+skills/          One directory per skill; each holds a SKILL.md.
+adapters/        Per-agent entry points (claude, cursor, copilot, gemini).
+INSTALL.md       Every install mode, in full.
+docs/            Maintainer notes (which tier a lesson belongs in).
+templates/       Drop-in workflow + the git controls that guard this repo.
+tools/consume/   Scripts behind the pinned-plugin mode.
+scripts/checks/  The validators CI runs on this repo.
+claude-tier/     Scaffold for Claude-only rules (currently empty by design).
+design-chain/    The spec → design → tasks trail behind past changes.
+```
 
 ## Deterministic git controls (optional)
 
-[`templates/git-controls/`](templates/git-controls/) packages the same machine-checks that guard this repo — a pinned pre-commit config, a CI workflow, and zero-dependency POSIX-sh validators — so you can drop them into any prose- or spec-shaped repo and have a broken invariant fail like a red build instead of slipping past review. See its [INSTALL](templates/git-controls/INSTALL.md).
+[`templates/git-controls/`](templates/git-controls/) packages the machine checks that guard this repo — a pinned pre-commit config, a CI workflow, and zero-dependency POSIX-sh validators. Drop them into any prose- or spec-shaped repo and a broken invariant fails like a red build instead of slipping past review. See its [INSTALL](templates/git-controls/INSTALL.md).
 
-## License, provenance & prior art
+## Philosophy
 
-Released under the [MIT License](LICENSE) — copy it into your own projects, proprietary ones included, with no obligation beyond keeping the copyright notice. The author owns this material and releases it freely; the real builds it was distilled from are used only as illustrative sources, and their identifying details have been genericized — you never need to know either project to apply a rule.
+- **Process before code.** Run the relevant process skill *before* implementing — don't back-fill the design afterward.
+- **Machines enforce, not memory.** A linter, a gate, an eval harness — encode the discipline so it survives the next contributor who didn't read this.
+- **Reality is the only proof.** Mocks prove wiring; only a live run proves the guarantee. An unverified claim is a hope.
+- **Reversible by default, a human on the irreversible 1%.** Cheap, undoable work flows freely; consequential acts pause for approval.
 
-This pack follows two open conventions it does not own — the [`AGENTS.md`](https://agents.md) root-instruction convention and the `skills/<slug>/SKILL.md` Agent Skills format — while the methodology content itself is original.
+## Where these rules came from
 
-Four skills — [environment-research](skills/environment-research/SKILL.md), [adversarial-lens-review](skills/adversarial-lens-review/SKILL.md), [acceptance-tests-observable-outcomes](skills/acceptance-tests-observable-outcomes/SKILL.md), and [definition-of-done-tooling](skills/definition-of-done-tooling/SKILL.md) — are adapted from [cmanaha/extended-superpowers](https://github.com/cmanaha/extended-superpowers) (MIT), rewritten from scratch in this pack's action-first, agent-agnostic voice with no reference to any specific tool, hook, or bundled agent. Each carries its own attribution note.
+Every rule survived a real build. Primarily a shipped, hexagonal, human-in-the-loop AI agent deployed to a serverless cloud runtime, behind a framework-free domain, with a CI-able eval harness gating its LLM decisions. The fan-out and large-surface live-testing rules came from a second build: a REST API client covering an external system's full API against a containerized live server.
+
+Both appear only as illustrative examples, genericized. **You never need to know either project to apply a rule** — nothing here assumes a language, framework, or agent runtime.
+
+## License, contributing, and prior art
+
+Released under the [MIT License](LICENSE) — copy it into your own projects, proprietary ones included, with no obligation beyond keeping the copyright notice. Contributions welcome; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
+This pack follows two open conventions it does not own: the [`AGENTS.md`](https://agents.md) root-instruction convention, and the `skills/<slug>/SKILL.md` Agent Skills format. The methodology content is original.
+
+Four skills — [environment-research](skills/environment-research/SKILL.md), [adversarial-lens-review](skills/adversarial-lens-review/SKILL.md), [acceptance-tests-observable-outcomes](skills/acceptance-tests-observable-outcomes/SKILL.md), and [definition-of-done-tooling](skills/definition-of-done-tooling/SKILL.md) — are adapted from [cmanaha/extended-superpowers](https://github.com/cmanaha/extended-superpowers) (MIT), rewritten from scratch in this pack's action-first, agent-agnostic voice. Each carries its own attribution note.
 
 *Claude, Cursor, GitHub Copilot, and Gemini are trademarks of their respective owners; this project is independent and not affiliated with or endorsed by any of them.*

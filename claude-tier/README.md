@@ -1,15 +1,28 @@
 # Claude-specific methodology tier
 
-This subtree is the **agent-specific tier** of the pack (decision F1/F2 in the
-[packaging-and-consumption BRIEF](../design-chain/packaging-and-consumption/BRIEF.md)):
-a second skills-directory plugin (`agent-methodology-claude`) that holds methodology which only makes sense
-in the Claude runtime — namespacing, hooks, slash-commands, and any Claude-only rules.
+**This directory is intentionally empty of skills.** Nothing here is installed today, and you do not
+need it to use the pack.
 
-It ships now as a **scaffold** (this README, the manifest, and an empty `skills/`) so the two-tier decision is
-git-addressable and versioned on the repo's single tag stream. Its **runtime consumption is deferred**: wiring
-an empty plugin through materialize/symlink/boot-check on every consumer would be machinery for zero skills.
-When the first Claude-only skill lands here, consumption is one already-designed symlink away
-(see the design-chain's [DESIGN.md](../design-chain/packaging-and-consumption/DESIGN.md)).
+It exists to hold rules that only make sense inside the Claude runtime — hook lifecycles, plugin and
+skill loading, slash-command surfaces — separately from the 22 agent-agnostic skills at the repo root
+(`../skills/`), which every agent consumes.
 
-The **portable tier** — the 22 agent-agnostic skills every agent consumes — stays at the repo root
-(`../skills/`), exposed by the root `agent-methodology` plugin manifest.
+## Why it ships empty
+
+Splitting the pack into a portable tier and an agent tier was a real decision, so it is recorded in
+git as a real directory with a real plugin manifest rather than a note promising a future layout.
+Wiring an empty plugin through materialize, symlink, and boot-check on every consumer would be
+machinery serving zero skills, so runtime consumption is deliberately deferred.
+
+When the first Claude-only rule lands here, turning it on is one already-designed symlink.
+
+## Where a lesson belongs
+
+Use [docs/placement.md](../docs/placement.md) to decide whether something is portable, agent-specific,
+or a project detail. The short version: state a lesson at the most general tier its content actually
+supports. If you can write it without naming Claude's mechanics, it belongs in `../skills/`, not here.
+
+## Background
+
+The two-tier decision and its deferred-consumption rationale are recorded in the
+[packaging-and-consumption design chain](../design-chain/packaging-and-consumption/BRIEF.md).
