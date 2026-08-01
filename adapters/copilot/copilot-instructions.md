@@ -134,6 +134,7 @@ back-fill process after the code. "Non-trivial" = anything beyond a one-file, fu
 
 - Capture a decision, gotcha, or preference at the moment of discovery as a small, dated, indexed note — what was decided or learned, and why — so it's figured out once.
 - Keep notes short and linked from an index, not buried in prose. Before trusting an existing note, verify it still holds; stale memory confidently asserted is worse than none.
+- Capture only what would otherwise be re-derived — never "in case", never a restatement of a document the note could link, never a status journal. Point at the artifact instead of copying it, and prune what a new note obsoletes. Recall is read into a limited context: a store that only grows dilutes judgment instead of accumulating it.
 
 ### autonomous-self-improvement-loop-safety
 

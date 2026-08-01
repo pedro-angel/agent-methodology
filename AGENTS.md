@@ -109,7 +109,7 @@ Whenever you ship or hand off code, treat documentation as first-class as the co
 
 ### [decision-memory](skills/decision-memory/SKILL.md)
 
-When a decision, gotcha, or preference would otherwise be re-derived next session, capture it **at the moment of discovery** as a small, dated, indexed note — what was decided or learned, and why — so the cost of re-figuring-it-out is paid once. Keep notes short and linked from an index, not buried in a wall of prose. And before trusting an existing note, verify it still holds: stale memory confidently asserted is worse than no memory, because it's believed. Memory is what turns a sequence of stateless sessions into a project that accumulates judgment instead of repeating its mistakes.
+When a decision, gotcha, or preference would otherwise be re-derived next session, capture it **at the moment of discovery** as a small, dated, indexed note — what was decided or learned, and why — so the cost of re-figuring-it-out is paid once. Keep notes short and linked from an index, not buried in a wall of prose. And before trusting an existing note, verify it still holds: stale memory confidently asserted is worse than no memory, because it's believed. Capture is bounded by the same trigger: nothing enters the store "in case", nothing restates a document it could link, and adding a note includes pruning what it obsoletes — recall is read into a limited context, so a store that only grows dilutes judgment instead of accumulating it. Memory is what turns a sequence of stateless sessions into a project that accumulates judgment instead of repeating its mistakes.
 
 ### [autonomous-self-improvement-loop-safety](skills/autonomous-self-improvement-loop-safety/SKILL.md)
 
