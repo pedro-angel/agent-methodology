@@ -102,6 +102,12 @@ repos:
         entry: scripts/checks/check-adapters-complete.sh
         files: ^(adapters/|skills/)
         pass_filenames: false
+      - id: check-adapters-carry-every-turn
+        name: "every enumerating adapter carries the every-turn rules"
+        language: script
+        entry: scripts/checks/check-adapters-carry-every-turn.sh
+        files: ^(adapters/|AGENTS\.md)
+        pass_filenames: false
       - id: check-templates-in-sync
         name: "templates/git-controls mirrors the root controls"
         language: script
