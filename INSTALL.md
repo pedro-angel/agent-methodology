@@ -131,18 +131,38 @@ Keep custom adapters thin — a pointer, not a copy of the rules. The bundled Cu
 
 ### Claude Code: one project, or every project
 
-This is the distinction that trips people, so be precise about what it does and doesn't cover.
+This is the distinction that trips people, and skills can live in three different places that do three different jobs. Getting them confused is the most common broken install.
 
-**Only `skills/` can be machine-wide.** Claude Code auto-discovers skills placed under `~/.claude/skills/`, so one copy there serves every project. `AGENTS.md` and `CLAUDE.md` remain **per project** regardless — the adapter's first instruction is to read `AGENTS.md`, and it looks for it beside itself at the project root. Installing skills machine-wide does not give you a working project; it saves you one copy command per project.
-
-| Piece | Per machine | Per project |
+| Location | Job | Required? |
 | --- | --- | --- |
-| `$PACK` (your clone) | yes, once | — |
-| `AGENTS.md` | no | **always** |
-| `CLAUDE.md` | no | **always** |
-| `skills/` | optional — `~/.claude/skills/` | otherwise yes |
+| `$PROJECT/skills/` | what the `skills/<slug>/SKILL.md` references in `AGENTS.md` resolve against; the only one non-Claude agents read | **always** |
+| `~/.claude/skills/` | registers them as native Claude Code skills in **every** project | optional |
+| `$PROJECT/.claude/skills/` | registers them as native Claude Code skills in **this** project | optional |
 
-So a fresh laptop takes one clone, one machine-wide skills copy if you want it, and then two files per project:
+**The optional two are additions, not replacements.** Installing skills under `~/.claude/skills/` does not let you skip `$PROJECT/skills/` — drop that and the path references in `AGENTS.md` dangle, and any non-Claude agent in the repo sees nothing.
+
+**Pick at most one of the optional two.** Having both `~/.claude/skills/` and `$PROJECT/.claude/skills/` gives the agent duplicates of every skill.
+
+```mermaid
+flowchart TD
+  subgraph mach["Your machine"]
+    home["~/.claude/skills/<br/>native discovery, every project<br/>optional"]
+  end
+
+  subgraph proj["Every project — all three required"]
+    ag["AGENTS.md"]
+    ad["CLAUDE.md"]
+    sk["skills/<br/>what AGENTS.md's paths resolve against"]
+  end
+
+  loc["$PROJECT/.claude/skills/<br/>native discovery, this project<br/>optional"]
+
+  ad --> ag
+  ag --> sk
+  home -.->|"pick one, or neither"| loc
+```
+
+So a fresh laptop takes one clone, optionally one machine-wide skills copy, and then three files per project:
 
 ```mermaid
 flowchart TD
@@ -164,18 +184,25 @@ flowchart TD
 ```
 
 ```bash
-# once per machine — skills for every project:
+# once per machine — optional native discovery everywhere:
 mkdir -p ~/.claude/skills && cp -R "$PACK/skills/." ~/.claude/skills/
 
-# then, still once per project:
+# then, per project, all three — none of these are optional:
 cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
 cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"
+mkdir -p "$PROJECT/skills" && cp -R "$PACK/skills/." "$PROJECT/skills/"
 ```
 
-**Never install skills in two places.** With skills at the user level, a second copy in `$PROJECT/.claude/skills/` gives the agent duplicates of every skill — so if you took the machine-wide route, skip the project-level `skills/` copy from Mode A. If you already have both, delete the project-level copy; the repo's own `skills/` directory, which other agents and contributors read, is unaffected:
+If you already have skills in **both** optional locations, delete the project-level one. Your repo's `skills/` directory — a different path, which other agents and contributors read — is unaffected:
 
 ```bash
 git rm -r "$PROJECT/.claude/skills"
+```
+
+To check which optional location you're using, on this machine or three months from now:
+
+```bash
+ls -d ~/.claude/skills "$PROJECT/.claude/skills" 2>/dev/null
 ```
 
 ## Step 3 — Verify it took
@@ -211,14 +238,20 @@ git -C "$PACK" pull
 | Submodule | `git submodule update --remote` and commit | one command, per repo |
 | Pinned plugin | approve and bump to a new SHA | deliberate, audited |
 
-In Copy mode, "re-run the copy commands" means, for each project you installed into:
+In Copy mode, "re-run the copy commands" is the same three lines you installed with. Nothing is conditional, and re-running is safe — every command overwrites in place:
 
 ```bash
+export PACK=~/agent-methodology          # re-export; shell variables don't survive a session
 git -C "$PACK" pull
-cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
-cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"
-cp -R "$PACK/skills/." "$PROJECT/skills/"        # skip if your skills are machine-wide
-cp -R "$PACK/skills/." ~/.claude/skills/         # instead of the line above, if they are
+
+for PROJECT in ~/code/project-a ~/code/project-b; do
+  cp "$PACK/AGENTS.md" "$PROJECT/AGENTS.md"
+  cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"
+  cp -R "$PACK/skills/." "$PROJECT/skills/"
+done
+
+# only if you also installed the optional machine-wide copy:
+[ -d ~/.claude/skills ] && cp -R "$PACK/skills/." ~/.claude/skills/
 ```
 
 Because the rules live only in `AGENTS.md` and the `SKILL.md` files, an update never has to touch a per-agent adapter.
@@ -283,7 +316,8 @@ The failure is silent by construction — the branch still updates weekly, so th
 | Symptom | Likely cause |
 | --- | --- |
 | Agent ignores the methodology entirely | The file isn't at the path that agent reads — check the Step 2 table |
-| Claude Code shows every skill twice | Skills installed both at `~/.claude/skills` and `.claude/skills/` — keep one |
+| Claude Code shows every skill twice | Skills in both optional locations — `~/.claude/skills/` and `$PROJECT/.claude/skills/`. Keep one. `$PROJECT/skills/` is a third, separate path and is not the cause |
+| Agent finds `AGENTS.md` but can't open a `SKILL.md` | `$PROJECT/skills/` is missing — a machine-wide install does not replace it |
 | Your edits to the pack don't appear in a project | You're in Copy mode; re-run the copy commands, or switch to Symlink |
 | Sync bot never opens a PR | The repository PR-creation flag is off — see the sync bot section |
 | Symlinks broken after cloning on another machine | Absolute symlink targets — use a submodule (Mode C) or copy |

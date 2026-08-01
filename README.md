@@ -19,22 +19,25 @@ cp "$PACK/adapters/claude/CLAUDE.md" "$PROJECT/CLAUDE.md"                # or cu
 mkdir -p "$PROJECT/skills" && cp -R "$PACK/skills/." "$PROJECT/skills/"  # the detail behind each rule
 ```
 
-**Nothing here is global.** Each piece has exactly one home:
+**There is no global install.** Those three files are needed in every project you want covered:
 
-| Piece | Where it goes |
-| --- | --- |
-| Your clone of this repo (`$PACK`) | once per machine |
-| `AGENTS.md` | **every project** |
-| Your agent's adapter (`CLAUDE.md`, `.mdc`, …) | **every project** |
-| `skills/` | every project — *or* once per machine, Claude Code only |
+| Piece | Where it goes | What it does |
+| --- | --- | --- |
+| Your clone (`$PACK`) | once per machine | the source you copy from |
+| `AGENTS.md` | **every project** | the rules; the adapter reads it from the project root |
+| Adapter (`CLAUDE.md`, `.mdc`, …) | **every project** | the file your agent looks for |
+| `skills/` | **every project** | what the `skills/<slug>/SKILL.md` references resolve against |
+| `~/.claude/skills/` | once per machine, optional | *adds* native skill discovery in Claude Code, everywhere |
 
-Using Claude Code across many projects? Install the skills once at the user level and drop the third line from every project's install. `AGENTS.md` and `CLAUDE.md` are still required in each project — the adapter looks for `AGENTS.md` beside itself at the project root:
+That last row is an **addition, not a replacement**. It registers the skills as natively invokable in Claude Code across all your projects; it does not remove the need for the three per-project files.
 
 ```bash
 mkdir -p ~/.claude/skills && cp -R "$PACK/skills/." ~/.claude/skills/
 ```
 
-A second computer means repeating the `git clone` there. [INSTALL.md](INSTALL.md) covers every agent, staying up to date, and the trade-offs between copying, symlinking, and pinning.
+Commit `AGENTS.md`, the adapter, and `skills/` to your repo — collaborators and CI need them too.
+
+A second computer means repeating the `git clone` there. The copy above is one of four install modes; it's the right default, and [INSTALL.md](INSTALL.md) covers the others (symlink, submodule, pinned) along with every agent and how updates reach you.
 
 ## How the pieces fit
 
