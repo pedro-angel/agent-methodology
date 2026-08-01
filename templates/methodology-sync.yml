@@ -5,6 +5,14 @@
 #
 # Keep the action pins consistent with the pins already in YOUR workflows
 # (check-one-pin-per-action fails on two pins for one action — by design).
+#
+# PREREQUISITE: the `pull-requests: write` grant below is NOT sufficient on its own.
+# Settings -> Actions -> General -> Workflow permissions -> "Allow GitHub Actions to
+# create and approve pull requests" must be ON, or this job pushes its branch and then
+# fails with "GitHub Actions is not permitted to create or approve pull requests".
+# The failure is silent in practice: the branch keeps updating, so the repo looks
+# covered while no PR ever appears. Check with:
+#   gh api repos/OWNER/REPO/actions/permissions/workflow --jq .can_approve_pull_request_reviews
 name: methodology sync
 
 on:

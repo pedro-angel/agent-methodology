@@ -136,7 +136,19 @@ Three modes, by how updates reach the project:
 
 - **Copied install (manual):** re-run the Step 1 and Step 2 commands — `cp` overwrites in place. Fine for a one-off; in practice manually-synced copies go stale fast (field data: three times in one week).
 - **Symlink or submodule (always-current):** pull the pack (`git -C "$PACK" pull`, or `git submodule update --remote`); every linked project picks up the change with nothing to re-run. Best when **developing** the pack, or on machines that are not the maintainer's own consumption hosts — for those, the Tag-pinned plugin mode (above) supersedes this, pinning a reviewed SHA instead of tracking the working tree.
-- **Sync bot (copied + weekly PR):** for shared repos that must vendor real files, add [`templates/methodology-sync.yml`](templates/methodology-sync.yml) as `.github/workflows/methodology-sync.yml`. Every week (or on manual dispatch) it re-syncs `AGENTS.md`, `skills/`, and the adapter from this pack's main and opens a PR only when something changed — drift becomes a reviewable diff instead of a silent gap. Verified live: a dispatch on an in-sync repo runs green and opens nothing.
+- **Sync bot (copied + weekly PR):** for shared repos that must vendor real files, add [`templates/methodology-sync.yml`](templates/methodology-sync.yml) as `.github/workflows/methodology-sync.yml`. Every week (or on manual dispatch) it re-syncs `AGENTS.md`, `skills/`, and the adapter from this pack's main and opens a PR only when something changed — drift becomes a reviewable diff instead of a silent gap.
+
+  **Prerequisite — the workflow's `pull-requests: write` grant is not sufficient on its own.** A repository-level toggle overrides it: with *Settings → Actions → General → Workflow permissions → "Allow GitHub Actions to create and approve pull requests"* unchecked, the job pushes its branch and then dies on `GitHub Actions is not permitted to create or approve pull requests`. Enable it before you rely on the bot, or check it from the CLI:
+
+  ```bash
+  # false here means the sync bot can never open its PR
+  gh api repos/OWNER/REPO/actions/permissions/workflow --jq .can_approve_pull_request_reviews
+  # enable it (leaves the default token read-only; each job still grants its own scopes)
+  gh api -X PUT repos/OWNER/REPO/actions/permissions/workflow \
+    -f default_workflow_permissions=read -F can_approve_pull_request_reviews=true
+  ```
+
+  This failure is silent by construction: the branch still updates every week, so the repo looks covered while no PR ever appears. Watch the Actions tab after the first real delta, not just the first dispatch — a dispatch on an already-in-sync repo runs green and opens nothing, which is indistinguishable from a run that could not open anything.
 
 Because the principles live only in `AGENTS.md` and the `SKILL.md` files, an update never has to touch a per-agent adapter.
 
