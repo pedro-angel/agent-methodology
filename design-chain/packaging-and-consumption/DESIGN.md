@@ -22,7 +22,9 @@ config at provision time, asserts the tier resolves and is complete on every ses
 
 - Boot-check line: `printf 'METHODOLOGY %s %s\n' "$msg" "$TOKEN"` on **stderr**, `$TOKEN ∈ {MISSING, PARTIAL}`,
   matching AC-4 `^METHODOLOGY .* (MISSING|PARTIAL)$` (token **last**).
-- INSTALL.md own-host mode marker heading (exact): `## Tag-pinned plugin (maintainer's own hosts)`.
+- INSTALL.md own-host mode marker heading (exact): `## Tag-pinned plugin (audited, immutable consumption)`.
+  *(Renamed 2026-08-02 from "(maintainer's own hosts)" — property-based framing; the identity framing
+  failed its one intended reader, who did not recognize the mode as theirs. t_ac8_docs pins the new literal.)*
 - AC-8 retired-model reject regex: `(ln -s.*~/.claude/skills/[^ ]*/|for d in .*skills.*ln -sfn)` (the per-slug
   symlink loop) — zero matches over the doc set.
 - AC-8 namespaced-handle regex: `` `agent-methodology(-claude)?:[a-z-]+` `` — zero matches in prose.

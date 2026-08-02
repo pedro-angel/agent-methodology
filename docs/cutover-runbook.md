@@ -1,7 +1,7 @@
 # Cutover runbook — legacy install → pinned plugin
 
 This runbook migrates one consumer from a legacy install of the pack to the
-[Tag-pinned plugin](../INSTALL.md#tag-pinned-plugin-maintainers-own-hosts) mode: a single
+[Tag-pinned plugin](../INSTALL.md#tag-pinned-plugin-audited-immutable-consumption) mode: a single
 symlink to a read-only, SHA-pinned materialization, boot-checked on every session start.
 
 Two legacy shapes exist, and both migrate with the same phases:

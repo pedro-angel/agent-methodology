@@ -74,7 +74,7 @@ Updates arrive when you run `git submodule update --remote` and commit the moved
 
 ### Mode D — Pinned plugin (audited)
 
-Freeze one specific commit instead of tracking a working tree, so what runs is always an immutable, reviewed export. This is the pack maintainer's own consumption path and it is Claude Code-specific; full commands are in [Tag-pinned plugin (maintainer's own hosts)](#tag-pinned-plugin-maintainers-own-hosts) below.
+Freeze one specific commit instead of tracking a working tree, so what runs is always an immutable, reviewed export. Pick this on any machine where you want to audit exactly what your agent consumes; it is Claude Code-specific. Full commands are in [Tag-pinned plugin (audited, immutable consumption)](#tag-pinned-plugin-audited-immutable-consumption) below.
 
 ### How the modes compare
 
@@ -95,7 +95,7 @@ flowchart LR
 
 Only the sync bot pushes updates toward you. Every other mode waits for you to pull.
 
-## Tag-pinned plugin (maintainer's own hosts)
+## Tag-pinned plugin (audited, immutable consumption)
 
 Mode D in full. `tools/consume/install-consumer.sh` exports one specific commit into a read-only directory with no `.git`, links it into your Claude config as a single plugin, and installs a boot check that runs at session start:
 
