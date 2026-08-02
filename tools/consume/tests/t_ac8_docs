@@ -19,7 +19,7 @@ for d in $DOCS; do
     && fail "retired per-slug install loop still present in: $d"
   grep -nE 'agent-methodology(-claude)?:[a-z-]+' "$d" >/dev/null 2>&1 \
     && fail "namespaced (<pack>:<slug>) invocation handle present in prose: $d"
-  c=$(grep -Fxc "## Tag-pinned plugin (maintainer's own hosts)" "$d")
+  c=$(grep -Fxc "## Tag-pinned plugin (audited, immutable consumption)" "$d")
   markers=$((markers + c))
 done
 
