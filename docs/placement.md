@@ -41,6 +41,13 @@ the agent-specific tier (for Claude Code, the `agent-methodology-claude` plugin 
 is built, provisioned, or wired, not a reusable principle. It stays a project artifact (an ADR or doc
 in the consuming repo), never a portable skill, because it would not transfer to another codebase.
 
+## Standing constraint — cross-agent support is free for Claude, or it doesn't ship
+
+Recorded 2026-08-02, at the owner's direction: supporting other agents must add **zero tokens to what
+a Claude session loads**. Adapters are separate files other tools read; nothing Claude consumes may
+grow to serve portability. A change that would tax the Claude context to benefit another agent is
+rejected on this principle, not on review taste.
+
 ## Upward promotion
 
 **Criterion: promote a lesson when it generalizes** — a project- or agent-tier lesson that turns out

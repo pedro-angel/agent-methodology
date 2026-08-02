@@ -15,6 +15,10 @@ index, not the whole rule.
 
 If the user contradicts a rule here, do what they asked; note the trade-off, don't override them.
 
+Two phrases bind narrowly everywhere below: "real infrastructure / live system" means a genuine
+instance provisioned for the purpose, never the production estate; destructive verbs (tear down,
+destroy, delete, prune) bind only to resources the current process, test, or change itself created.
+
 ## Before you act
 
 Match the task to the rules below (most non-trivial work touches two or three), open the
@@ -84,14 +88,14 @@ sentence you write: replies, reports, commit bodies, doc prose.
 
 ### battle-testing-on-real-infra
 
-- Before calling any integration, deployment, or hard guarantee "done," prove it end-to-end against the **real** systems — live API, real database, actual deployed runtime.
+- Before calling any integration, deployment, or hard guarantee "done," prove it end-to-end against the **real** systems — a live API, a real database, an actually-deployed runtime, each an instance provisioned for the test, never the production estate.
 - Record the run as a named evidence artifact (results file, captured log, saved response) someone else can open. Mocks prove wiring, not external reality (auth scopes, quota, serialization, cold starts, IAM propagation).
 - Treat the spec as a hypothesis and the running system as ground truth: implement what the server does and record each divergence in the code. When a path's happy case needs infra you lack, drive the real route and assert its exact semantic rejection rather than dropping to mocks; mark a path untested only when even that is impossible, naming what's missing. Round-trip a model-backed feature through a real local model, not a mock.
 
 ### acceptance-tests-observable-outcomes
 
 - Completion is defined by what a user or caller observes, not which code paths ran: for each observable success criterion in the spec, write an executable acceptance test against the real system, derived from the spec before or independent of the implementation.
-- Assert the semantic essentials (the value, the status, the substring that matters) and tolerate incidental formatting the spec never promised. Run teardown unconditionally, whether the assertions passed or failed. Treat a red or missing acceptance test, not a green unit suite, as the real "not done yet" signal.
+- Assert the semantic essentials (the value, the status, the substring that matters) and tolerate incidental formatting the spec never promised. Teardown of anything the test itself created runs unconditionally, whether the assertions passed or failed. Treat a red or missing acceptance test, not a green unit suite, as the real "not done yet" signal.
 
 ### grounded-verifiable-gates
 
@@ -113,7 +117,7 @@ sentence you write: replies, reports, commit bodies, doc prose.
 
 - A fact you didn't just observe from the current primary source — memory, a doc, a prior note, another step's report — is a hypothesis: re-ground it against the live artifact at its real version, read the actual bytes, and cite `path:line@commit` before it drives an irreversible or security action.
 - Inherited code is untrusted until its behaviour is pinned by a characterization test — re-reading cannot establish trust (a compromised tool hides its trojan from its own source).
-- A dangerous construct (privilege-bypass flag, wildcard grant, `eval`, unbounded egress) is guilty until a machine-parseable check proves it inert; its presence is the finding. Disposition it with a recorded reason or remove it — never downgrade by eye ("probably a comment") or defer the check ("glance later").
+- A dangerous construct (privilege-bypass flag, wildcard grant, `eval`, unbounded egress) is guilty until a machine-parseable check proves it inert; its presence is the finding. Disposition it with a recorded reason or remove it in the normal reviewed change — a live grant or config you don't own goes to its owner, never mutated on your own authority — and never downgrade by eye ("probably a comment") or defer the check ("glance later").
 
 ### evidence-over-deference
 
@@ -146,7 +150,7 @@ sentence you write: replies, reports, commit bodies, doc prose.
 
 - Capture a decision, gotcha, or preference at the moment of discovery as a small, dated, indexed note — what was decided or learned, and why — so it's figured out once.
 - Keep notes short and linked from an index, not buried in prose. Before trusting an existing note, verify it still holds; stale memory confidently asserted is worse than none.
-- Capture only what would otherwise be re-derived — never "in case", never a restatement of a document the note could link, never a status journal. Point at the artifact instead of copying it, and prune what a new note obsoletes. Recall is read into a limited context: a store that only grows dilutes judgment instead of accumulating it.
+- Capture only what would otherwise be re-derived — never "in case", never a restatement of a document the note could link, never a status journal. Point at the artifact instead of copying it, and prune the store notes a new note obsoletes (never external artifacts). Recall is read into a limited context: a store that only grows dilutes judgment instead of accumulating it.
 
 ### autonomous-self-improvement-loop-safety
 
@@ -156,7 +160,7 @@ sentence you write: replies, reports, commit bodies, doc prose.
 ### parallel-agent-fan-out
 
 - When you fan out many write-capable sub-agents across one build (N modules, endpoints, call-sites), design the independence in and trust no report out.
-- Pre-wire the shared seams (registry, stubs, fixtures) yourself so each agent fills only a leaf; give each a disjoint file-ownership manifest and revert violations rather than merge them; serialize the join so only the coordinator edits shared seams.
+- Pre-wire the shared seams (registry, stubs, fixtures) yourself so each agent fills only a leaf; give each a disjoint file-ownership manifest and revert its out-of-manifest edits rather than merge them; serialize the join so only the coordinator edits shared seams.
 - On shared live substrate, namespace every resource an agent creates and forbid it touching anything it didn't create, cleaning up in a finalizer. Re-run each agent's own gate yourself (tests, types, lint, live run) against the merged tree, believing the exit code not the prose. Cut along real independence — if two units must edit the same file, they are one unit.
 
 ## Install
