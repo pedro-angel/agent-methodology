@@ -6,6 +6,13 @@
 #   <sha>       the commit to materialize (the pin of record)
 #   <out-dir>   a NOT-yet-existing directory to create as the materialization
 #
+# Env (optional, default-off): MAT_EXCLUDE_SKILLS — space-separated skill slugs
+# to OMIT from this materialization. A consumer-side choice (e.g. skills another
+# installed plugin already owns), recorded in a read-only .excluded beside
+# .skillset; .skillset derives from what remains, so the boot check stays green.
+# Fail-closed: a slug that is malformed or absent from the export aborts — a
+# typo must not silently ship the very skill it meant to exclude.
+#
 # On success <out-dir> holds the export of <sha> (no .git), a frozen .skillset
 # descriptor derived from its own skills/, read-only (a-w). All-or-nothing:
 # failure leaves no partial <out-dir> and exits non-zero. Idempotence and the
@@ -45,6 +52,19 @@ trap 'cleanup; exit 130' INT TERM HUP
 # checks are the fidelity guarantee (see header).
 git -C "$checkout" archive --format=tar "$sha" >"$tar" || die "git archive failed"
 tar -x -f "$tar" -C "$tmp" || die "tar extract failed (truncated / disk-full?)"
+
+# Consumer-side exclusion (default-off; see header). Runs BEFORE the .skillset
+# derivation so the descriptor reflects what actually ships.
+if [ -n "${MAT_EXCLUDE_SKILLS:-}" ]; then
+  for s in $MAT_EXCLUDE_SKILLS; do
+    case "$s" in
+      *[!a-z0-9-]*) die "exclusion slug malformed (kebab-case only): $s" ;;
+    esac
+    [ -d "$tmp/skills/$s" ] || die "exclusion slug not in export: $s"
+    rm -rf "$tmp/skills/$s" || die "could not exclude: $s"
+  done
+  for s in $MAT_EXCLUDE_SKILLS; do printf '%s\n' "$s"; done | LC_ALL=C sort >"$tmp/.excluded"
+fi
 
 # Freeze the skill-set descriptor from the export's OWN skills/ dirs (never a
 # hand-authored list — that would re-introduce a silent drift surface).

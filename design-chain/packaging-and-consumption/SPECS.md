@@ -181,7 +181,8 @@ expected set** and fails closed if the set is empty or missing a member.
   resolves (a labeled proxy for manifest-inertness).
 - **AC-9 (REQ-11, REQ-10)** — the enumerated deny-path set — `{t_missing, t_partial, t_sha_mismatch,
   t_force_refused, t_first_resolution_wins, t_export_fidelity_mismatch, t_reap_preserves_current_previous,
-  t_review_fail_closed, t_wiring_absent_at_provision}` (9; = the collector's `EXPECTED`) — is all
+  t_review_fail_closed, t_wiring_absent_at_provision, t_exclude_unknown_refused}` (10; = the collector's
+  `EXPECTED`; grown from 9 by the v6 addendum below) — is all
   present in the collected tests; removing any member turns the gate red (a meta-test); each asserts its deny
   signal and goes red when its fail-closed return is flipped; a pinned scan finds zero marketplace/signing
   artifacts (`marketplace.json`, `*.sig`, `*.asc`, signing-manifest keys); shellcheck/POSIX, the anonymization
@@ -206,6 +207,24 @@ expected set** and fails closed if the set is empty or missing a member.
 | REQ-9 one own-host mode; others stay | round-1 #8; F3 | AC-8 |
 | REQ-10 non-goal fence | Non-goals, F4 | AC-9 |
 | REQ-11 house + deny-path | currency-and-audit; grounded-gates r10 | AC-9 |
+
+## Addendum v6 (2026-08-02) — consumer-side skill exclusion (REQ-12)
+
+*Reconciled onto shipped code the same day it shipped. Motivation: on hosts that also run the
+extended-superpowers plugin, four portable skills (environment-research, adversarial-lens-review,
+acceptance-tests-observable-outcomes, definition-of-done-tooling) duplicate skills that plugin already
+owns — two near-identical names make skill routing nondeterministic. The pack keeps all 22 for other
+agents; the exclusion is the CONSUMER's recorded choice, never the pack's.*
+
+- **REQ-12 — consumer-side exclusion, default-off, fail-closed, recorded.** `MAT_EXCLUDE_SKILLS`
+  (space-separated slugs) omits the named skills from a materialization. Unset/empty ⇒ byte-identical
+  prior behavior. A malformed or absent slug aborts with no partial out-dir. Exclusions are recorded
+  sorted in a read-only `.excluded` beside `.skillset`; `.skillset` derives from what remains, so AC-4's
+  boot check holds unchanged.
+- **AC-10 (REQ-12)** — `t_exclude_materializes_subset` (subset ships, `.skillset` from remainder,
+  `.excluded` sorted + read-only), `t_exclude_default_off` (no env ⇒ no `.excluded`, full set), and
+  `t_exclude_unknown_refused` (deny member, mutation-verified: neutering the existence guard lets the
+  unknown slug pass).
 
 ## Deferred residuals (documented, not dropped — each grows without rework)
 
