@@ -11,6 +11,8 @@
 #   <config-dir>     the consumer's Claude config dir (e.g. ~/.claude); the tier
 #                    symlink and the SessionStart hook go here
 #
+# Honors MAT_EXCLUDE_SKILLS via bump.sh → materialize.sh (consumer-side skill
+# exclusion — default-off, fail-closed, recorded in the export's .excluded).
 # Materializes the pin (via bump.sh), installs bootcheck.sh OUTSIDE any tier (a
 # dangling tier can't disable its own check — P13: a SessionStart hook fires even
 # headless), registers it as a SessionStart hook, then ASSERTS the wiring or fails

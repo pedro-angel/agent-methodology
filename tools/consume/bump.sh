@@ -9,6 +9,8 @@
 #   (for rollback). Refuses --force. A `git fetch` (only if <remote> is given) is
 #   best-effort and its exit status is NOT trusted — the SHA compare is the gate.
 #
+# Honors MAT_EXCLUDE_SKILLS via materialize.sh (consumer-side skill exclusion —
+# see materialize.sh header; default-off, fail-closed).
 # Non-interactive: BUMP_ASSUME_YES=1 auto-approves the executable-content review
 # (for automated first-setup / an already-reviewed pin). POSIX sh.
 set -eu
