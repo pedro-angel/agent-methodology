@@ -29,13 +29,13 @@ Red-flag thoughts — if you catch yourself thinking any of these, STOP and appl
 
 - **A dangerous construct is guilty until proven inert** — a privilege-bypass flag, a wildcard grant, an `eval`, an unbounded network egress. Its mere presence is the finding, independent of whether it looks reachable, because one future edit can re-arm a dead one.
 - **Parse, don't string-match, for any safety verdict.** Whether a line is a comment, a string, reachable, or actually executed is a parse question. A judgment that pattern-matches is defense-in-depth that must fail toward asking — never the boundary.
-- **Stop-and-verify on discovery.** The moment you find a dangerous construct, resolve it before continuing: prove it inert with a machine check, disposition it with a recorded reason, or remove it. Never carry it forward unacknowledged.
+- **Stop-and-verify on discovery.** The moment you find a dangerous construct, resolve it before continuing: prove it inert with a machine check, disposition it with a recorded reason, or remove it — removal meaning a normal reviewed change to the code in front of you; a live grant, rule, or config you don't own is escalated to its owner, never mutated on your own authority. Never carry it forward unacknowledged.
 
 ## Inherited code: behaviour, not reading, is the proof
 
 - **You cannot recover trust by re-reading.** Source inspection alone cannot establish trust — the classic result is that a compromised tool hides its own trojan from its own source, and verifying the source recurses forever into the tools that built it. Trust is reconstructed from observed behaviour under controlled execution plus provenance, not from reading or recall.
 - **Characterize before you change.** Pin the actual current behaviour of inherited code in a test before modifying it — describe what it *does*, not what it *should* do — so a change that alters behaviour fails loudly.
-- **Every inherited unit carries provenance.** Where did it come from, when, and what proves it still holds? Orphaned code with no provenance and no behavioural test is untrusted by default; disposition or delete it, never leave it "probably fine".
+- **Every inherited unit carries provenance.** Where did it come from, when, and what proves it still holds? Orphaned code with no provenance and no behavioural test is untrusted by default; disposition it, or delete it through the normal reviewed change — never leave it "probably fine".
 
 ## Why
 
