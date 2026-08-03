@@ -97,17 +97,11 @@ Only the sync bot pushes updates toward you. Every other mode waits for you to p
 
 ## Tag-pinned plugin (audited, immutable consumption)
 
-Mode D in full. `tools/consume/install-consumer.sh` exports one specific commit into a read-only directory with no `.git`, links it into your Claude config as a single plugin, and installs a boot check that runs at session start:
+Mode D in full: **[docs/pinned-install.md](docs/pinned-install.md) is the complete step-by-step** — from a bare user to a verified install, with exclusions, the always-on rules, a one-command `bump`, verification, rollback, and uninstall. Every block in it was executed verbatim on a fresh user before it was published.
 
-```bash
-# <checkout> <approved-sha> <per-consumer-root> <claude-config-dir>
-sh "$PACK/tools/consume/install-consumer.sh" \
-   "$PACK" "$(git -C "$PACK" rev-parse HEAD)" ~/.methodology-consumer ~/.claude
-```
+The shape: `tools/consume/install-consumer.sh` exports one specific commit into a read-only directory with no `.git`, links it into your Claude config as a single plugin, and installs a boot check that runs at session start. Updates arrive only when you approve a new commit — a bump is a reviewed move to a new SHA, never a live `git pull` — and the boot check lives outside the tier it verifies, so a broken install cannot disable its own alarm.
 
-Updates arrive only when you approve a new commit. A bump is a reviewed move to a new SHA — never a live `git pull` — so what runs is an audited, immutable commit rather than whatever the working tree happens to hold. The boot check lives outside the tier it verifies, so a broken install cannot disable its own alarm.
-
-Provisioning needs `jq` or `python3` for a safe `settings.json` merge; the runtime path needs neither. Developing the pack itself still uses a plain checkout — this mode is for machines that *consume* the methodology.
+Provisioning needs `jq` or `python3` for a safe `settings.json` merge; the runtime path needs neither. Developing the pack itself still uses a plain checkout — this mode is for users that *consume* the methodology. Migrating an existing non-pinned install is a cutover, not a fresh install: see [docs/cutover-runbook.md](docs/cutover-runbook.md).
 
 ## Step 2 — Wire your agent
 

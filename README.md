@@ -72,7 +72,7 @@ The files can live in your project four different ways. They differ only in **ho
 | **Copy** | real, committed files | you re-run the copy commands | trying it out; a repo others clone |
 | **Sync bot** | real, committed files | a weekly workflow opens a PR | a shared repo that must vendor real files |
 | **Symlink** | links to your local clone | you `git pull` the clone | solo machine, many projects, one checkout |
-| **Pinned plugin** | a link to a frozen export | you review and approve a new commit | you want to audit exactly what runs |
+| **Pinned plugin** | a link to a frozen export | you review and approve a new commit | you want to audit exactly what runs — [step-by-step](docs/pinned-install.md) |
 
 ```mermaid
 flowchart TD
