@@ -33,7 +33,7 @@ repos:
   # ---- generic markdown style ----------------------------------------------
   # Node hook, auto-provisioned and sandboxed by the manager (never committed).
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.22.1
+    rev: v0.23.2
     hooks:
       - id: markdownlint-cli2
         # Config: .markdownlint-cli2.yaml (MD013/MD033/MD041 relaxed for a prose pack).
@@ -55,7 +55,7 @@ repos:
   # would otherwise skip a non-+x extensionless test. Scoped to tools/consume/, so the hook is
   # skipped in any repo without those paths — dormant for adopters of the generic starter.
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
+    rev: v0.11.0.1-1
     hooks:
       - id: shellcheck
         files: ^tools/consume/(.+\.sh|tests/t_[A-Za-z0-9_]+)$
